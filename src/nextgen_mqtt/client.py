@@ -1,0 +1,398 @@
+"""MQTT client for NextGen infrastructure.
+
+Supports two connection methods:
+1. WebSocket via device-shard-api (uses user token from affiliate credentials)
+2. Direct MQTTS connection (uses device token from device login)
+"""
+
+import asyncio
+import json
+import logging
+import secrets
+import ssl
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+from urllib.parse import urlparse
+
+import aiomqtt
+import websockets
+from websockets.asyncio.client import ClientConnection
+
+from .auth import AuthClient, DeviceToken, UserToken
+from .config import DEVICE_TOPICS, Environment, ShardConfig, StagingEnvironment, Topics
+from .models import MQTTMessage, TopicType
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class DeviceConnection:
+    """Represents a connection to a device's MQTT topics."""
+
+    device_serial: str
+    subscribed_topics: list[str]
+    connection_type: str  # "websocket" or "mqtt"
+
+
+MessageHandler = Callable[[MQTTMessage], Any]
+
+
+class NextGenMQTTClient:
+    """Client for connecting to NextGen MQTT infrastructure.
+
+    Supports two connection methods:
+
+    1. **WebSocket** (recommended for user applications):
+       - Uses affiliate credentials to get a user token
+       - Connects via WebSocket to device-shard-api
+       - Messages are in protobuf format (raw bytes)
+
+    2. **Direct MQTT** (for device simulation/testing):
+       - Uses device credentials to get a device token
+       - Connects directly to MQTT broker via TLS
+       - Standard MQTT protocol
+
+    Example (WebSocket with user token):
+        ```python
+        async with NextGenMQTTClient.staging() as client:
+            async with client.connect_websocket("2530295") as conn:
+                async for message in conn.messages():
+                    print(f"Topic: {message.topic}, Payload: {message.payload}")
+        ```
+
+    Example (Direct MQTT with device credentials):
+        ```python
+        async with NextGenMQTTClient.staging() as client:
+            async with client.connect_mqtt("2530295", "device_password") as conn:
+                async for message in conn.messages():
+                    print(f"Topic: {message.topic}, Payload: {message.payload}")
+        ```
+    """
+
+    def __init__(self, env: Environment):
+        """Initialize the client with an environment configuration."""
+        self.env = env
+        self._auth_client = AuthClient(env)
+
+    @classmethod
+    def staging(cls) -> "NextGenMQTTClient":
+        """Create a client configured for the staging environment."""
+        return cls(StagingEnvironment.STAGING)
+
+    async def close(self) -> None:
+        """Close all connections."""
+        await self._auth_client.close()
+
+    async def get_user_token(
+        self,
+        device_serial: str,
+        ttl_seconds: int = 3600,
+        globals_config: dict[str, Any] | None = None,
+    ) -> UserToken:
+        """Get a user token for WebSocket connection."""
+        if globals_config is None:
+            globals_config = {
+                "can_view_events": True,
+                "can_control_devices": True,
+                "can_manage_users": False,
+                "can_manage_devices": False,
+            }
+        return await self._auth_client.create_user_token(
+            device_serial=device_serial,
+            ttl_seconds=ttl_seconds,
+            globals_config=globals_config,
+        )
+
+    async def get_device_token(
+        self,
+        device_serial: str,
+        device_password: str,
+    ) -> DeviceToken:
+        """Get a device token for direct MQTT connection."""
+        return await self._auth_client.device_login(
+            device_serial=device_serial,
+            device_password=device_password,
+        )
+
+    @asynccontextmanager
+    async def connect_websocket(
+        self,
+        device_serial: str,
+        ttl_seconds: int = 3600,
+        use_secondary: bool = False,
+    ) -> AsyncIterator["WebSocketConnection"]:
+        """Connect via WebSocket to device-shard-api using user token.
+
+        This is the recommended method for user applications.
+        Uses affiliate credentials to authenticate.
+
+        Args:
+            device_serial: The device serial number.
+            ttl_seconds: Token TTL in seconds.
+            use_secondary: If True, connect to secondary endpoint.
+
+        Yields:
+            WebSocketConnection for receiving messages.
+        """
+        logger.info(f"Authenticating for device {device_serial}...")
+        user_token = await self.get_user_token(device_serial, ttl_seconds=ttl_seconds)
+        logger.info(f"Got user token, expires at {user_token.expires_at}")
+
+        # Get WebSocket URL from token response
+        endpoints = user_token.secondary if use_secondary and user_token.secondary else user_token.primary
+        ws_base_url = endpoints.ws[0]
+
+        # Construct full WebSocket URL
+        ws_url = f"{ws_base_url}/v1/device/{device_serial}/ws"
+        logger.info(f"Connecting to WebSocket: {ws_url}")
+
+        # Build topic list for reference
+        topics = Topics.device_topics(device_serial)
+        logger.info(f"Subscribing to topics: {topics}")
+
+        async with websockets.connect(
+            ws_url,
+            additional_headers={"Authorization": f"Bearer {user_token.token}"},
+        ) as ws:
+            logger.info("WebSocket connected!")
+
+            connection = DeviceConnection(
+                device_serial=device_serial,
+                subscribed_topics=topics,
+                connection_type="websocket",
+            )
+
+            yield WebSocketConnection(ws, connection)
+
+    @asynccontextmanager
+    async def connect_mqtt(
+        self,
+        device_serial: str,
+        device_password: str,
+        topic_names: list[str] | None = None,
+        use_secondary: bool = False,
+    ) -> AsyncIterator["MQTTConnection"]:
+        """Connect directly to MQTT broker using device credentials.
+
+        This method is for device simulation or testing.
+        Requires device password (not affiliate credentials).
+
+        Args:
+            device_serial: The device serial number.
+            device_password: The device password.
+            topic_names: List of topic suffixes to subscribe to.
+            use_secondary: If True, connect to secondary (1-B) instead of primary (1-A).
+
+        Yields:
+            MQTTConnection for receiving messages.
+        """
+        if topic_names is None:
+            topic_names = DEVICE_TOPICS
+
+        logger.info(f"Device login for {device_serial}...")
+        device_token = await self.get_device_token(device_serial, device_password)
+        logger.info(f"Got device token, expires at {device_token.expires_at}")
+
+        # Parse MQTT URL from token response - choose primary (1-A) or secondary (1-B)
+        endpoints = device_token.secondary if use_secondary and device_token.secondary else device_token.primary
+        mqtt_url = endpoints.mq[0]
+        parsed = urlparse(mqtt_url)
+        hostname = parsed.hostname
+        port = parsed.port or 8883
+
+        logger.info(f"Connecting to MQTT broker {hostname}:{port}...")
+
+        # Use unique client ID to avoid conflicts with existing sessions
+        unique_suffix = secrets.token_hex(4)
+        client_id = f"py-{device_serial}-{unique_suffix}"
+        logger.info(f"Using client ID: {client_id}")
+
+        # Create SSL context for TLS connection
+        ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        ssl_ctx.verify_mode = ssl.CERT_REQUIRED
+        ssl_ctx.check_hostname = True
+        ssl_ctx.load_default_certs()
+
+        topics = Topics.device_topics(device_serial, topic_names)
+
+        async with aiomqtt.Client(
+            hostname=hostname,
+            port=port,
+            username=device_serial,
+            password=device_token.token,
+            tls_context=ssl_ctx,
+            identifier=client_id,
+            protocol=aiomqtt.ProtocolVersion.V5,
+            timeout=30,
+        ) as mqtt_client:
+            for topic in topics:
+                await mqtt_client.subscribe(topic, qos=1)
+                logger.info(f"Subscribed to {topic}")
+
+            connection = DeviceConnection(
+                device_serial=device_serial,
+                subscribed_topics=topics,
+                connection_type="mqtt",
+            )
+
+            yield MQTTConnection(mqtt_client, connection)
+
+    # Convenience alias
+    connect = connect_websocket
+
+    async def __aenter__(self) -> "NextGenMQTTClient":
+        """Async context manager entry."""
+        return self
+
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        """Async context manager exit."""
+        await self.close()
+
+
+class WebSocketConnection:
+    """A connected WebSocket client ready to receive messages."""
+
+    def __init__(self, ws: ClientConnection, connection: DeviceConnection):
+        """Initialize with WebSocket and connection info."""
+        self._ws = ws
+        self.connection = connection
+
+    @property
+    def device_serial(self) -> str:
+        """Get the connected device serial."""
+        return self.connection.device_serial
+
+    @property
+    def topics(self) -> list[str]:
+        """Get subscribed topics."""
+        return self.connection.subscribed_topics
+
+    async def messages(self) -> AsyncIterator[MQTTMessage]:
+        """Iterate over incoming messages.
+
+        Note: Messages from device-shard-api are in protobuf format.
+        The payload contains raw protobuf bytes.
+
+        Yields:
+            MQTTMessage for each received message.
+        """
+        async for data in self._ws:
+            if isinstance(data, bytes):
+                yield MQTTMessage(
+                    topic=f"{self.connection.device_serial}/ws",
+                    payload=data,
+                    received_at=datetime.now(),
+                    qos=1,
+                )
+            elif isinstance(data, str):
+                yield MQTTMessage(
+                    topic=f"{self.connection.device_serial}/ws",
+                    payload=data.encode(),
+                    received_at=datetime.now(),
+                    qos=1,
+                )
+
+    async def send(self, payload: bytes) -> None:
+        """Send a message (protobuf) to the device."""
+        await self._ws.send(payload)
+        logger.info(f"Sent {len(payload)} bytes to {self.connection.device_serial}")
+
+
+class MQTTConnection:
+    """A connected MQTT client ready to receive messages."""
+
+    def __init__(self, mqtt_client: aiomqtt.Client, connection: DeviceConnection):
+        """Initialize with MQTT client and connection info."""
+        self._mqtt = mqtt_client
+        self.connection = connection
+
+    @property
+    def device_serial(self) -> str:
+        """Get the connected device serial."""
+        return self.connection.device_serial
+
+    @property
+    def topics(self) -> list[str]:
+        """Get subscribed topics."""
+        return self.connection.subscribed_topics
+
+    async def messages(self) -> AsyncIterator[MQTTMessage]:
+        """Iterate over incoming MQTT messages.
+
+        Yields:
+            MQTTMessage for each received message.
+        """
+        async for msg in self._mqtt.messages:
+            yield MQTTMessage(
+                topic=str(msg.topic),
+                payload=msg.payload if isinstance(msg.payload, bytes) else msg.payload.encode(),
+                received_at=datetime.now(),
+                qos=msg.qos,
+            )
+
+    async def publish(
+        self,
+        topic_suffix: str,
+        payload: bytes | str,
+        qos: int = 1,
+        retain: bool = False,
+    ) -> None:
+        """Publish a message to a device topic."""
+        full_topic = f"{self.connection.device_serial}/{topic_suffix}"
+        if isinstance(payload, str):
+            payload = payload.encode()
+        await self._mqtt.publish(full_topic, payload, qos=qos, retain=retain)
+        logger.info(f"Published to {full_topic}")
+
+    async def send_command(self, payload: bytes | str) -> None:
+        """Send a command to the device."""
+        await self.publish(Topics.COMMAND, payload)
+
+
+async def subscribe_websocket(
+    device_serial: str,
+    env: Environment | None = None,
+) -> AsyncIterator[MQTTMessage]:
+    """Convenience function to subscribe via WebSocket.
+
+    Args:
+        device_serial: The device serial number.
+        env: Environment configuration (defaults to staging).
+
+    Yields:
+        MQTTMessage for each received message.
+    """
+    if env is None:
+        env = StagingEnvironment.STAGING
+
+    async with NextGenMQTTClient(env) as client:
+        async with client.connect_websocket(device_serial) as conn:
+            async for message in conn.messages():
+                yield message
+
+
+async def subscribe_mqtt(
+    device_serial: str,
+    device_password: str,
+    env: Environment | None = None,
+) -> AsyncIterator[MQTTMessage]:
+    """Convenience function to subscribe via direct MQTT.
+
+    Args:
+        device_serial: The device serial number.
+        device_password: The device password.
+        env: Environment configuration (defaults to staging).
+
+    Yields:
+        MQTTMessage for each received message.
+    """
+    if env is None:
+        env = StagingEnvironment.STAGING
+
+    async with NextGenMQTTClient(env) as client:
+        async with client.connect_mqtt(device_serial, device_password) as conn:
+            async for message in conn.messages():
+                yield message
