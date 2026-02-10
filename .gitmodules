@@ -1,0 +1,3 @@
+[submodule "helix-protobuf"]
+	path = helix-protobuf
+	url = git@github.com:alula-net/helix-protobuf.git
