@@ -106,9 +106,10 @@ async def send_and_receive(device_serial: str, hex_payload: str, timeout: float)
                     async for msg in conn.messages():
                         drained += 1
                         if msg.helix:
-                            logger.info("Drained: %s (msg_id=%d)", msg.helix.message_name, msg.helix.msg_id)
+                            d = MessageToDict(msg.helix.message, preserving_proto_field_name=True)
+                            logger.info("Drained %d bytes: %s Helix: %s", len(msg.payload), msg.payload.hex(), json.dumps(d))
                         else:
-                            logger.info("Drained: raw %d bytes", len(msg.payload))
+                            logger.info("Drained %d bytes: %s", len(msg.payload), msg.payload.hex())
             except asyncio.TimeoutError:
                 pass
             if drained:
