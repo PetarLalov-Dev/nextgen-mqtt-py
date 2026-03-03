@@ -1,9 +1,14 @@
 """Data models for MQTT messages."""
 
-from dataclasses import dataclass
+from __future__ import annotations
+
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from .helix import HelixMeta
 
 
 class TopicType(Enum):
@@ -47,6 +52,7 @@ class MQTTMessage:
     payload: bytes
     received_at: datetime
     qos: int = 1
+    helix: HelixMeta | None = field(default=None, repr=False)
 
     @property
     def topic_type(self) -> TopicType:

@@ -5,8 +5,6 @@ Supports two connection methods:
 2. Direct MQTTS connection (uses device token from device login)
 """
 
-import asyncio
-import json
 import logging
 import secrets
 import ssl
@@ -22,8 +20,9 @@ import websockets
 from websockets.asyncio.client import ClientConnection
 
 from .auth import AuthClient, DeviceToken, UserToken
-from .config import DEVICE_TOPICS, Environment, ShardConfig, StagingEnvironment, Topics
-from .models import MQTTMessage, TopicType
+from .config import DEVICE_TOPICS, Environment, StagingEnvironment, Topics
+from .helix import parse_helix_message
+from .models import MQTTMessage
 
 logger = logging.getLogger(__name__)
 
@@ -273,27 +272,30 @@ class WebSocketConnection:
     async def messages(self) -> AsyncIterator[MQTTMessage]:
         """Iterate over incoming messages.
 
-        Note: Messages from device-shard-api are in protobuf format.
-        The payload contains raw protobuf bytes.
+        Messages are decoded from Helix protobuf format. The topic is resolved
+        from the oneof field number (e.g. ``{serial}/r`` for command responses).
+        If decoding fails, falls back to ``{serial}/ws`` with ``helix=None``.
 
         Yields:
             MQTTMessage for each received message.
         """
+        serial = self.connection.device_serial
         async for data in self._ws:
-            if isinstance(data, bytes):
-                yield MQTTMessage(
-                    topic=f"{self.connection.device_serial}/ws",
-                    payload=data,
-                    received_at=datetime.now(),
-                    qos=1,
-                )
-            elif isinstance(data, str):
-                yield MQTTMessage(
-                    topic=f"{self.connection.device_serial}/ws",
-                    payload=data.encode(),
-                    received_at=datetime.now(),
-                    qos=1,
-                )
+            raw = data if isinstance(data, bytes) else data.encode()
+            topic = f"{serial}/ws"
+            helix = None
+            try:
+                helix = parse_helix_message(raw)
+                topic = f"{serial}/{helix.topic_code}"
+            except Exception:
+                logger.debug("Failed to decode Helix message, using raw fallback", exc_info=True)
+            yield MQTTMessage(
+                topic=topic,
+                payload=raw,
+                received_at=datetime.now(),
+                qos=1,
+                helix=helix,
+            )
 
     async def send(self, payload: bytes) -> None:
         """Send a message (protobuf) to the device."""

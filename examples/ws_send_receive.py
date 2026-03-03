@@ -100,8 +100,12 @@ async def send_and_receive(device_serial: str, hex_payload: str, timeout: float)
             drained = 0
             try:
                 async with asyncio.timeout(0.5):
-                    async for _ in conn.messages():
+                    async for msg in conn.messages():
                         drained += 1
+                        if msg.helix:
+                            logger.info("Drained: %s (msg_id=%d)", msg.helix.message_name, msg.helix.msg_id)
+                        else:
+                            logger.info("Drained: raw %d bytes", len(msg.payload))
             except asyncio.TimeoutError:
                 pass
             if drained:
@@ -131,17 +135,17 @@ async def send_and_receive(device_serial: str, hex_payload: str, timeout: float)
                 sys.exit(1)
 
             logger.info("Response received: %d bytes on %s", len(message.payload), message.topic)
-            print(
-                json.dumps(
-                    {
-                        "status": "ok",
-                        "device_serial": device_serial,
-                        "response": message.payload.hex(),
-                        "topic": message.topic,
-                        "received_at": message.received_at.isoformat(),
-                    }
-                )
-            )
+            result = {
+                "status": "ok",
+                "device_serial": device_serial,
+                "response": message.payload.hex(),
+                "topic": message.topic,
+                "received_at": message.received_at.isoformat(),
+            }
+            if message.helix:
+                result["message_type"] = message.helix.message_name
+                result["msg_id"] = message.helix.msg_id
+            print(json.dumps(result))
 
 
 def main() -> None:

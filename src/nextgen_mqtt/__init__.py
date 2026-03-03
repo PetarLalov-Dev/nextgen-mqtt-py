@@ -36,6 +36,7 @@ from .config import (
     StagingEnvironment,
     Topics,
 )
+from .helix import HelixMeta, parse_helix_message
 from .models import ConnectionState, MessageType, MQTTMessage, TopicType
 
 __version__ = "0.1.0"
@@ -67,4 +68,7 @@ __all__ = [
     "TopicType",
     "ConnectionState",
     "MessageType",
+    # Helix
+    "HelixMeta",
+    "parse_helix_message",
 ]
