@@ -25,6 +25,7 @@ from logging.handlers import RotatingFileHandler
 from google.protobuf.json_format import MessageToDict
 
 from nextgen_mqtt import NextGenMQTTClient
+from nextgen_mqtt.helix import parse_helix_message
 
 LOG_FILE = "ws_send_receive.log"
 LOG_MAX_BYTES = 5 * 1024 * 1024  # 5 MB
@@ -115,7 +116,12 @@ async def send_and_receive(device_serial: str, hex_payload: str, timeout: float)
 
             normalized_hex = "".join(hex_payload.split())
             payload = bytes.fromhex(normalized_hex)
-            logger.info("Sending %d bytes: %s", len(payload), normalized_hex)
+            try:
+                req_helix = parse_helix_message(payload)
+                req_dict = MessageToDict(req_helix.message, preserving_proto_field_name=True)
+                logger.info("Sending %d bytes: %s Helix: %s", len(payload), normalized_hex, json.dumps(req_dict))
+            except Exception:
+                logger.info("Sending %d bytes: %s", len(payload), normalized_hex)
 
             await conn.send(payload)
             logger.info("Payload sent, waiting up to %.1fs for response", timeout)
@@ -136,16 +142,21 @@ async def send_and_receive(device_serial: str, hex_payload: str, timeout: float)
                 )
                 sys.exit(1)
 
-            logger.info("Response received: %d bytes on %s", len(message.payload), message.topic)
+            resp_hex = message.payload.hex()
+            if message.helix:
+                resp_dict = MessageToDict(message.helix.message, preserving_proto_field_name=True)
+                logger.info("Response %d bytes: %s Helix: %s", len(message.payload), resp_hex, json.dumps(resp_dict))
+            else:
+                logger.info("Response %d bytes: %s", len(message.payload), resp_hex)
             result = {
                 "status": "ok",
                 "device_serial": device_serial,
-                "response": message.payload.hex(),
+                "response": resp_hex,
                 "topic": message.topic,
                 "received_at": message.received_at.isoformat(),
             }
             if message.helix:
-                result["helix"] = MessageToDict(message.helix.message, preserving_proto_field_name=True)
+                result["helix"] = resp_dict
             print(json.dumps(result))
 
 
