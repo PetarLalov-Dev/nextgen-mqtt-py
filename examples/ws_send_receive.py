@@ -22,6 +22,8 @@ import logging
 import sys
 from logging.handlers import RotatingFileHandler
 
+from google.protobuf.json_format import MessageToDict
+
 from nextgen_mqtt import NextGenMQTTClient
 
 LOG_FILE = "ws_send_receive.log"
@@ -145,6 +147,7 @@ async def send_and_receive(device_serial: str, hex_payload: str, timeout: float)
             if message.helix:
                 result["message_type"] = message.helix.message_name
                 result["msg_id"] = message.helix.msg_id
+                result["fields"] = MessageToDict(message.helix.payload, preserving_proto_field_name=True)
             print(json.dumps(result))
 
 
