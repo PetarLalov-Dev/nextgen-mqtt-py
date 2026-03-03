@@ -41,6 +41,7 @@ class HelixMeta:
     topic_code: str
     message_name: str
     payload: Message
+    message: Message
 
 
 def _field_to_topic(field_number: int, field_name: str) -> str:
@@ -82,4 +83,5 @@ def parse_helix_message(data: bytes) -> HelixMeta:
         topic_code=topic_code,
         message_name=field_name,
         payload=getattr(helix, field_name),
+        message=helix,
     )

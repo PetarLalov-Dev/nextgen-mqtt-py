@@ -145,9 +145,7 @@ async def send_and_receive(device_serial: str, hex_payload: str, timeout: float)
                 "received_at": message.received_at.isoformat(),
             }
             if message.helix:
-                result["message_type"] = message.helix.message_name
-                result["msg_id"] = message.helix.msg_id
-                result["fields"] = MessageToDict(message.helix.payload, preserving_proto_field_name=True)
+                result["helix"] = MessageToDict(message.helix.message, preserving_proto_field_name=True)
             print(json.dumps(result))
 
 
