@@ -27,7 +27,7 @@ from . import cid_event_pb2 as cid__event__pb2
 from . import common_pb2 as common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0esecurity.proto\x12\x08security\x1a\x1b\x62uf/validate/validate.proto\x1a\x0f\x63id_event.proto\x1a\x0c\x63ommon.proto\"\x11\n\x0fSystemStatusGet\"\xfb\x02\n\x13SystemStatusGetResp\x12\'\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x18.security.SystemGetError\x12\x16\n\x0eglobal_trouble\x18\x03 \x01(\x08\x12\x14\n\x0ctamper_cover\x18\x04 \x01(\x08\x12\x13\n\x0btamper_wall\x18\x05 \x01(\x08\x12\x0f\n\x07\x61\x63_fail\x18\x06 \x01(\x08\x12\x13\n\x0blow_battery\x18\x07 \x01(\x08\x12\x17\n\x0f\x62\x61ttery_missing\x18\x08 \x01(\x08\x12\x1f\n\x17interactive_server_fail\x18\t \x01(\x08\x12\x1c\n\x14\x63\x65ntral_station_fail\x18\n \x01(\x08\x12\x16\n\x0elow_power_mode\x18\x0b \x01(\x08\x12\x15\n\rsiren_trouble\x18\x0c \x01(\x08\x12\x14\n\x0creceiver_jam\x18\r \x01(\x08\x12\x1a\n\x12phone_line_trouble\x18\x0e \x01(\x08\x12\x19\n\x11loss_of_time_date\x18\x0f \x01(\x08\"\x0f\n\rSystemInfoGet\"g\n\x11SystemInfoGetResp\x12\'\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x18.security.SystemGetError\x12)\n\x0b\x65nroll_mode\x18\x01 \x01(\x0e\x32\x14.security.EnrollMode\"\x11\n\x0fSystemConfigGet\"\x86\x02\n\x13SystemConfigGetResp\x12\'\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x18.security.SystemGetError\x12\x35\n\x07\x64\x65tails\x18\x01 \x01(\x0b\x32$.security.SystemDetailsGetResp_Write\x12?\n\x0clocal_timers\x18\x02 \x01(\x0b\x32).security.SystemTimersConfigGetResp_Write\x12N\n\x19reportable_event_settings\x18\x03 \x01(\x0b\x32+.cid_event.SystemEventSettingsGetResp_Write\"B\n\x15SystemConfigWriteResp\x12)\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x1a.security.SystemWriteError\"\x12\n\x10SystemDetailsGet\"\x9c\x03\n\x1aSystemDetailsGetResp_Write\x12\'\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x18.security.SystemGetError\x12\x13\n\x0bsystem_name\x18\x01 \x01(\t\x12\x1f\n\x0e\x61\x63\x63ount_number\x18\x02 \x01(\x0c\x42\x07\xbaH\x04z\x02\x18\x10\x12)\n\ruser_pin_size\x18\x03 \x01(\x0b\x32\x12.common.MinMaxSize\x12.\n\x12installer_pin_size\x18\x04 \x01(\x0b\x32\x12.common.MinMaxSize\x12\x1c\n\x14tamper_cover_enabled\x18\x05 \x01(\x08\x12\x1b\n\x13tamper_wall_enabled\x18\x06 \x01(\x08\x12\x17\n\x0f\x63ommercial_mode\x18\x07 \x01(\x08\x12\x19\n\x11ul_compliant_mode\x18\x08 \x01(\x08\x12\x1e\n\x16led_brightness_percent\x18\t \x01(\r\x12\x19\n\x11location_latitude\x18\n \x01(\x02\x12\x1a\n\x12location_longitude\x18\x0b \x01(\x02\"C\n\x16SystemDetailsWriteResp\x12)\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x1a.security.SystemWriteError\"\x17\n\x15SystemTimersConfigGet\"\x8c\x01\n\x1fSystemTimersConfigGetResp_Write\x12\'\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x18.security.SystemGetError\x12$\n\x1cserial_keep_alive_period_sec\x18\x01 \x01(\r\x12\x1a\n\x12\x61\x63_fail_detect_sec\x18\x02 \x01(\r\"H\n\x1bSystemTimersConfigWriteResp\x12)\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x1a.security.SystemWriteError\"\xad\x01\n\x03\x41rm\x12\x15\n\rpartition_num\x18\x01 \x01(\r\x12$\n\x05level\x18\x02 \x01(\x0e\x32\x15.security.ArmingLevel\x12\x12\n\nsilent_arm\x18\x03 \x01(\x08\x12\x16\n\x0eno_entry_delay\x18\x04 \x01(\x08\x12\x16\n\x0esilent_protest\x18\x05 \x01(\x08\x12\x11\n\tforce_arm\x18\x06 \x01(\x08\x12\x12\n\nquick_exit\x18\x07 \x01(\x08\"C\n\x07\x41rmResp\x12!\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x12.security.ArmError\x12\x15\n\rpartition_num\x18\x01 \x01(\r\">\n\x07\x41rmMany\x12\x33\n\x12partition_num_list\x18\x01 \x03(\x0b\x32\r.security.ArmB\x08\xbaH\x05\x92\x01\x02\x10\x08\"8\n\x0b\x41rmManyResp\x12)\n\x04\x61rms\x18\x01 \x03(\x0b\x32\x11.security.ArmRespB\x08\xbaH\x05\x92\x01\x02\x10\x08\"#\n\x0eSendPanicAlarm\x12\x11\n\tnotify_cs\x18\x01 \x01(\x08\"9\n\x12SendPanicAlarmResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.security.AlarmError\"\x0f\n\rSendFireAlarm\"8\n\x11SendFireAlarmResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.security.AlarmError\"%\n\x10SendMedicalAlarm\x12\x11\n\tnotify_cs\x18\x01 \x01(\x08\";\n\x14SendMedicalAlarmResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.security.AlarmError\"O\n\rSetEnrollMode\x12)\n\x0b\x65nroll_mode\x18\x01 \x01(\x0e\x32\x14.security.EnrollMode\x12\x13\n\x0btimeout_sec\x18\x02 \x01(\r\"=\n\x11SetEnrollModeResp\x12(\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x19.security.EnrollModeError*q\n\x0eSystemGetError\x12\x0f\n\x0bGET_SUCCESS\x10\x00\x12\x19\n\x15\x45RR_GENERIC_OR_NESTED\x10\x01\x12\x19\n\x15GET_ERR_NOT_AVAILABLE\x10\x02\x12\x18\n\x14GET_ERR_INVALID_USER\x10\x03*z\n\x10SystemWriteError\x12\x11\n\rWRITE_SUCCESS\x10\x00\x12\x1c\n\x18WRITE_ERR_INVALID_CONFIG\x10\x01\x12\x19\n\x15WRITE_ERR_NOT_ALLOWED\x10\x02\x12\x1a\n\x16WRITE_ERR_INVALID_USER\x10\x03*\xe0\x03\n\x08\x41rmError\x12\x0f\n\x0b\x41RM_SUCCESS\x10\x00\x12\x1d\n\x19\x41RM_ERR_INVALID_PARTITION\x10\x01\x12\x19\n\x15\x41RM_ERR_INVALID_LEVEL\x10\x02\x12\x15\n\x11\x41RM_ERR_NOT_READY\x10\x03\x12\x1a\n\x16\x41RM_ERR_BYPASS_FAILURE\x10\x04\x12\"\n\x1e\x41RM_ERR_INVALID_ARMING_OPTIONS\x10\x05\x12\x1e\n\x1a\x41RM_ERR_INVALID_LOCKED_OUT\x10\x06\x12\x18\n\x14\x41RM_ERR_ALARM_ACTIVE\x10\x07\x12\x18\n\x14\x41RM_ERR_INVALID_USER\x10\x08\x12\x17\n\x13\x41RM_ERR_INVALID_PIN\x10\t\x12\x17\n\x13\x41RM_ERR_NOT_ALLOWED\x10\n\x12\x1d\n\x19\x41RM_ERR_EXECUTE_CMD_ERROR\x10\x0b\x12\x19\n\x15\x41RM_ERR_NOT_CONFIRMED\x10\x0c\x12\x18\n\x14\x41RM_ERR_PIN_REQUIRED\x10\r\x12\x1f\n\x1b\x41RM_ERR_IN_PROGRAMMING_MODE\x10\x0e\x12\x13\n\x0f\x41RM_ERR_PENDING\x10\x0f\x12\"\n\x1e\x41RM_ERR_FUNCTION_NOT_AVAILABLE\x10\x10*\xeb\x01\n\nAlarmError\x12\x11\n\rALARM_SUCCESS\x10\x00\x12\x1a\n\x16\x41LARM_ERR_ALARM_ACTIVE\x10\x01\x12\x1b\n\x17\x41LARM_ERR_GENERAL_ERROR\x10\x02\x12\x1f\n\x1b\x41LARM_ERR_EXECUTE_CMD_ERROR\x10\x03\x12\x1b\n\x17\x41LARM_ERR_NOT_CONFIRMED\x10\x04\x12\x1c\n\x18\x41LARM_ERR_PIN_LOCKED_OUT\x10\x05\x12\x1a\n\x16\x41LARM_ERR_INVALID_USER\x10\x06\x12\x19\n\x15\x41LARM_ERR_INVALID_PIN\x10\x07*\xb5\x01\n\x0b\x41rmingLevel\x12\x12\n\x0e\x41RMING_NOT_SET\x10\x00\x12\x12\n\x0e\x41RMING_ALL_OFF\x10\x01\x12\x11\n\rARMING_DISARM\x10\x02\x12\x0f\n\x0b\x41RMING_STAY\x10\x03\x12\x10\n\x0c\x41RMING_NIGHT\x10\x04\x12\x0f\n\x0b\x41RMING_AWAY\x10\x05\x12\x11\n\rARMING_LEVEL6\x10\x06\x12\x11\n\rARMING_LEVEL7\x10\x07\x12\x11\n\rARMING_LEVEL8\x10\x08*\x9d\x02\n\tAlarmType\x12\x0e\n\nALARM_NONE\x10\x00\x12\x0e\n\nALARM_FIRE\x10\x01\x12\x0c\n\x08\x41LARM_CO\x10\x02\x12\x0f\n\x0b\x41LARM_PANIC\x10\x03\x12\x13\n\x0f\x41LARM_INTRUSION\x10\x04\x12\x10\n\x0c\x41LARM_TAMPER\x10\x05\x12\x13\n\x0f\x41LARM_AUXILIARY\x10\x06\x12\x12\n\x0e\x41LARM_LOW_TEMP\x10\x07\x12\x13\n\x0f\x41LARM_HIGH_TEMP\x10\x08\x12\x15\n\x11\x41LARM_WATER_LEVEL\x10\t\x12\x16\n\x12\x41LARM_SILENT_PANIC\x10\n\x12\x11\n\rALARM_GENERIC\x10\x0b\x12\x17\n\x13\x41LARM_FLAMMABLE_GAS\x10\x0c\x12\x11\n\rALARM_MEDICAL\x10\r*\xb2\x03\n\tSoundType\x12\x0e\n\nSOUND_NONE\x10\x00\x12\x14\n\x10SOUND_TEMPORAL_3\x10\x01\x12\x13\n\x0fSOUND_INTRUSION\x10\x02\x12\r\n\tSOUND_LOW\x10\x03\x12\x14\n\x10SOUND_TEMPORAL_4\x10\x04\x12\x17\n\x13SOUND_TROUBLE_BEEPS\x10\x05\x12\x0f\n\x0bSOUND_ENTRY\x10\x06\x12\x13\n\x0fSOUND_ENTRY_END\x10\x07\x12\x0e\n\nSOUND_EXIT\x10\x08\x12\x12\n\x0eSOUND_EXIT_END\x10\t\x12\x11\n\rSOUND_PROTEST\x10\n\x12\x14\n\x10SOUND_CHIME_OPEN\x10\x0b\x12\x15\n\x11SOUND_CHIME_CLOSE\x10\x0c\x12\x10\n\x0cSOUND_DISARM\x10\r\x12\x0f\n\x0bSOUND_BEEP1\x10\x15\x12\x0f\n\x0bSOUND_BEEP2\x10\x16\x12\x0f\n\x0bSOUND_BEEP3\x10\x17\x12\x13\n\x0fSOUND_BEEP_LONG\x10\x18\x12\x19\n\x15SOUND_CHIME_OPEN_LOUD\x10\x19\x12\x1a\n\x16SOUND_CHIME_CLOSE_LOUD\x10\x1a\x12\x11\n\rSOUND_WARNING\x10\x1b*S\n\x0e\x45ntryDelayType\x12\x14\n\x10\x45NTRY_DELAY_NONE\x10\x00\x12\x15\n\x11\x45NTRY_DELAY_SHORT\x10\x01\x12\x14\n\x10\x45NTRY_DELAY_LONG\x10\x02*\xa9\x01\n\nEnrollMode\x12\x18\n\x14\x45NROLL_MODE_DISABLED\x10\x00\x12\x16\n\x12SENSOR_ENROLL_MODE\x10\x01\x12\x14\n\x10WIFI_ENROLL_MODE\x10\x02\x12\x13\n\x0f\x42US_ENROLL_MODE\x10\x03\x12\x13\n\x0f\x41LL_ENROLL_MODE\x10\x04\x12\x13\n\x0fPANEL_PROG_MODE\x10\x05\x12\x14\n\x10PANEL_SETUP_MODE\x10\x06*\x97\x01\n\x0f\x45nrollModeError\x12\x12\n\x0e\x45NROLL_SUCCESS\x10\x00\x12\x1b\n\x17\x45NROLL_ERR_INVALID_USER\x10\x02\x12\x1a\n\x16\x45NROLL_ERR_INVALID_PIN\x10\x03\x12\x1a\n\x16\x45NROLL_ERR_NOT_ALLOWED\x10\x04\x12\x1b\n\x17\x45NROLL_ERR_INVALID_MODE\x10\x05\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0esecurity.proto\x12\x08security\x1a\x1b\x62uf/validate/validate.proto\x1a\x0f\x63id_event.proto\x1a\x0c\x63ommon.proto\"\x11\n\x0fSystemStatusGet\"\xfb\x02\n\x13SystemStatusGetResp\x12\'\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x18.security.SystemGetError\x12\x16\n\x0eglobal_trouble\x18\x03 \x01(\x08\x12\x14\n\x0ctamper_cover\x18\x04 \x01(\x08\x12\x13\n\x0btamper_wall\x18\x05 \x01(\x08\x12\x0f\n\x07\x61\x63_fail\x18\x06 \x01(\x08\x12\x13\n\x0blow_battery\x18\x07 \x01(\x08\x12\x17\n\x0f\x62\x61ttery_missing\x18\x08 \x01(\x08\x12\x1f\n\x17interactive_server_fail\x18\t \x01(\x08\x12\x1c\n\x14\x63\x65ntral_station_fail\x18\n \x01(\x08\x12\x16\n\x0elow_power_mode\x18\x0b \x01(\x08\x12\x15\n\rsiren_trouble\x18\x0c \x01(\x08\x12\x14\n\x0creceiver_jam\x18\r \x01(\x08\x12\x1a\n\x12phone_line_trouble\x18\x0e \x01(\x08\x12\x19\n\x11loss_of_time_date\x18\x0f \x01(\x08\"\x0f\n\rSystemInfoGet\"g\n\x11SystemInfoGetResp\x12\'\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x18.security.SystemGetError\x12)\n\x0b\x65nroll_mode\x18\x01 \x01(\x0e\x32\x14.security.EnrollMode\"\x11\n\x0fSystemConfigGet\"\x86\x02\n\x13SystemConfigGetResp\x12\'\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x18.security.SystemGetError\x12\x35\n\x07\x64\x65tails\x18\x01 \x01(\x0b\x32$.security.SystemDetailsGetResp_Write\x12?\n\x0clocal_timers\x18\x02 \x01(\x0b\x32).security.SystemTimersConfigGetResp_Write\x12N\n\x19reportable_event_settings\x18\x03 \x01(\x0b\x32+.cid_event.SystemEventSettingsGetResp_Write\"B\n\x15SystemConfigWriteResp\x12)\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x1a.security.SystemWriteError\"\x12\n\x10SystemDetailsGet\"\x9c\x03\n\x1aSystemDetailsGetResp_Write\x12\'\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x18.security.SystemGetError\x12\x13\n\x0bsystem_name\x18\x01 \x01(\t\x12\x1f\n\x0e\x61\x63\x63ount_number\x18\x02 \x01(\x0c\x42\x07\xbaH\x04z\x02\x18\x10\x12)\n\ruser_pin_size\x18\x03 \x01(\x0b\x32\x12.common.MinMaxSize\x12.\n\x12installer_pin_size\x18\x04 \x01(\x0b\x32\x12.common.MinMaxSize\x12\x1c\n\x14tamper_cover_enabled\x18\x05 \x01(\x08\x12\x1b\n\x13tamper_wall_enabled\x18\x06 \x01(\x08\x12\x17\n\x0f\x63ommercial_mode\x18\x07 \x01(\x08\x12\x19\n\x11ul_compliant_mode\x18\x08 \x01(\x08\x12\x1e\n\x16led_brightness_percent\x18\t \x01(\r\x12\x19\n\x11location_latitude\x18\n \x01(\x02\x12\x1a\n\x12location_longitude\x18\x0b \x01(\x02\"C\n\x16SystemDetailsWriteResp\x12)\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x1a.security.SystemWriteError\"\x17\n\x15SystemTimersConfigGet\"\xab\x01\n\x1fSystemTimersConfigGetResp_Write\x12\'\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x18.security.SystemGetError\x12$\n\x1cserial_keep_alive_period_sec\x18\x01 \x01(\r\x12\x1a\n\x12\x61\x63_fail_detect_sec\x18\x02 \x01(\r\x12\x1d\n\x15\x66\x61lse_alarm_reduction\x18\x03 \x01(\x08\"H\n\x1bSystemTimersConfigWriteResp\x12)\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x1a.security.SystemWriteError\"\xad\x01\n\x03\x41rm\x12\x15\n\rpartition_num\x18\x01 \x01(\r\x12$\n\x05level\x18\x02 \x01(\x0e\x32\x15.security.ArmingLevel\x12\x12\n\nsilent_arm\x18\x03 \x01(\x08\x12\x16\n\x0eno_entry_delay\x18\x04 \x01(\x08\x12\x16\n\x0esilent_protest\x18\x05 \x01(\x08\x12\x11\n\tforce_arm\x18\x06 \x01(\x08\x12\x12\n\nquick_exit\x18\x07 \x01(\x08\"C\n\x07\x41rmResp\x12!\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x12.security.ArmError\x12\x15\n\rpartition_num\x18\x01 \x01(\r\">\n\x07\x41rmMany\x12\x33\n\x12partition_num_list\x18\x01 \x03(\x0b\x32\r.security.ArmB\x08\xbaH\x05\x92\x01\x02\x10\x08\"8\n\x0b\x41rmManyResp\x12)\n\x04\x61rms\x18\x01 \x03(\x0b\x32\x11.security.ArmRespB\x08\xbaH\x05\x92\x01\x02\x10\x08\"#\n\x0eSendPanicAlarm\x12\x11\n\tnotify_cs\x18\x01 \x01(\x08\"9\n\x12SendPanicAlarmResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.security.AlarmError\"\x0f\n\rSendFireAlarm\"8\n\x11SendFireAlarmResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.security.AlarmError\"%\n\x10SendMedicalAlarm\x12\x11\n\tnotify_cs\x18\x01 \x01(\x08\";\n\x14SendMedicalAlarmResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.security.AlarmError\"O\n\rSetEnrollMode\x12)\n\x0b\x65nroll_mode\x18\x01 \x01(\x0e\x32\x14.security.EnrollMode\x12\x13\n\x0btimeout_sec\x18\x02 \x01(\r\"=\n\x11SetEnrollModeResp\x12(\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x19.security.EnrollModeError*w\n\x0eSystemGetError\x12\x0f\n\x0bGET_SUCCESS\x10\x00\x12\x1b\n\x15\x45RR_GENERIC_OR_NESTED\x10\xd1\x83\x04\x12\x1b\n\x15GET_ERR_NOT_AVAILABLE\x10\xff\x85\x04\x12\x1a\n\x14GET_ERR_INVALID_USER\x10\x9a\x85\x04*\x80\x01\n\x10SystemWriteError\x12\x11\n\rWRITE_SUCCESS\x10\x00\x12\x1e\n\x18WRITE_ERR_INVALID_CONFIG\x10\xb7\x84\x04\x12\x1b\n\x15WRITE_ERR_NOT_ALLOWED\x10\x99\x85\x04\x12\x1c\n\x16WRITE_ERR_INVALID_USER\x10\x9a\x85\x04*\xf0\x03\n\x08\x41rmError\x12\x0f\n\x0b\x41RM_SUCCESS\x10\x00\x12\x1f\n\x19\x41RM_ERR_INVALID_PARTITION\x10\xb8\x84\x04\x12\x1b\n\x15\x41RM_ERR_INVALID_LEVEL\x10\xc3\x84\x04\x12\x17\n\x11\x41RM_ERR_NOT_READY\x10\xfd\x85\x04\x12\x1c\n\x16\x41RM_ERR_BYPASS_FAILURE\x10\x86\x86\x04\x12$\n\x1e\x41RM_ERR_INVALID_ARMING_OPTIONS\x10\xc4\x84\x04\x12\x1c\n\x16\x41RM_ERR_PIN_LOCKED_OUT\x10\x9d\x85\x04\x12\x1a\n\x14\x41RM_ERR_ALARM_ACTIVE\x10\x82\x86\x04\x12\x1a\n\x14\x41RM_ERR_INVALID_USER\x10\x9a\x85\x04\x12\x19\n\x13\x41RM_ERR_INVALID_PIN\x10\x9c\x85\x04\x12\x19\n\x13\x41RM_ERR_NOT_ALLOWED\x10\x99\x85\x04\x12\x1c\n\x16\x41RM_ERR_EXECUTE_FAILED\x10\xe1\x86\x04\x12\x1b\n\x15\x41RM_ERR_NOT_CONFIRMED\x10\xe2\x86\x04\x12\x1a\n\x14\x41RM_ERR_PIN_REQUIRED\x10\x9b\x85\x04\x12!\n\x1b\x41RM_ERR_IN_PROGRAMMING_MODE\x10\x80\x86\x04\x12\x15\n\x0f\x41RM_ERR_PENDING\x10\xfe\x85\x04\x12\x1b\n\x15\x41RM_ERR_NOT_AVAILABLE\x10\xff\x85\x04*\xfa\x01\n\nAlarmError\x12\x11\n\rALARM_SUCCESS\x10\x00\x12\x1c\n\x16\x41LARM_ERR_ALARM_ACTIVE\x10\x82\x86\x04\x12!\n\x1b\x41LARM_ERR_GENERIC_OR_NESTED\x10\xd1\x83\x04\x12\x1e\n\x18\x41LARM_ERR_EXECUTE_FAILED\x10\xe1\x86\x04\x12\x1d\n\x17\x41LARM_ERR_NOT_CONFIRMED\x10\xe2\x86\x04\x12\x1e\n\x18\x41LARM_ERR_PIN_LOCKED_OUT\x10\x9d\x85\x04\x12\x1c\n\x16\x41LARM_ERR_INVALID_USER\x10\x9a\x85\x04\x12\x1b\n\x15\x41LARM_ERR_INVALID_PIN\x10\x9c\x85\x04*\xb5\x01\n\x0b\x41rmingLevel\x12\x12\n\x0e\x41RMING_NOT_SET\x10\x00\x12\x12\n\x0e\x41RMING_ALL_OFF\x10\x01\x12\x11\n\rARMING_DISARM\x10\x02\x12\x0f\n\x0b\x41RMING_STAY\x10\x03\x12\x10\n\x0c\x41RMING_NIGHT\x10\x04\x12\x0f\n\x0b\x41RMING_AWAY\x10\x05\x12\x11\n\rARMING_LEVEL6\x10\x06\x12\x11\n\rARMING_LEVEL7\x10\x07\x12\x11\n\rARMING_LEVEL8\x10\x08*\xfd\x02\n\tAlarmType\x12\x0e\n\nALARM_NONE\x10\x00\x12\x0e\n\nALARM_FIRE\x10\x01\x12\x0c\n\x08\x41LARM_CO\x10\x02\x12\x0f\n\x0b\x41LARM_PANIC\x10\x03\x12\x13\n\x0f\x41LARM_INTRUSION\x10\x04\x12\x10\n\x0c\x41LARM_TAMPER\x10\x05\x12\x13\n\x0f\x41LARM_AUXILIARY\x10\x06\x12\x12\n\x0e\x41LARM_LOW_TEMP\x10\x07\x12\x13\n\x0f\x41LARM_HIGH_TEMP\x10\x08\x12\x15\n\x11\x41LARM_WATER_LEVEL\x10\t\x12\x16\n\x12\x41LARM_SILENT_PANIC\x10\n\x12\x11\n\rALARM_GENERIC\x10\x0b\x12\x17\n\x13\x41LARM_FLAMMABLE_GAS\x10\x0c\x12\x11\n\rALARM_MEDICAL\x10\r\x12\x14\n\x10\x41LARM_ENTRY_EXIT\x10\x0e\x12\x13\n\x0f\x41LARM_PERIMETER\x10\x0f\x12\x12\n\x0e\x41LARM_INTERIOR\x10\x10\x12\x0f\n\x0b\x41LARM_SMOKE\x10\x11\x12\x0e\n\nALARM_HEAT\x10\x12*\xb2\x03\n\tSoundType\x12\x0e\n\nSOUND_NONE\x10\x00\x12\x14\n\x10SOUND_TEMPORAL_3\x10\x01\x12\x13\n\x0fSOUND_INTRUSION\x10\x02\x12\r\n\tSOUND_LOW\x10\x03\x12\x14\n\x10SOUND_TEMPORAL_4\x10\x04\x12\x17\n\x13SOUND_TROUBLE_BEEPS\x10\x05\x12\x0f\n\x0bSOUND_ENTRY\x10\x06\x12\x13\n\x0fSOUND_ENTRY_END\x10\x07\x12\x0e\n\nSOUND_EXIT\x10\x08\x12\x12\n\x0eSOUND_EXIT_END\x10\t\x12\x11\n\rSOUND_PROTEST\x10\n\x12\x14\n\x10SOUND_CHIME_OPEN\x10\x0b\x12\x15\n\x11SOUND_CHIME_CLOSE\x10\x0c\x12\x10\n\x0cSOUND_DISARM\x10\r\x12\x0f\n\x0bSOUND_BEEP1\x10\x15\x12\x0f\n\x0bSOUND_BEEP2\x10\x16\x12\x0f\n\x0bSOUND_BEEP3\x10\x17\x12\x13\n\x0fSOUND_BEEP_LONG\x10\x18\x12\x19\n\x15SOUND_CHIME_OPEN_LOUD\x10\x19\x12\x1a\n\x16SOUND_CHIME_CLOSE_LOUD\x10\x1a\x12\x11\n\rSOUND_WARNING\x10\x1b*S\n\x0e\x45ntryDelayType\x12\x14\n\x10\x45NTRY_DELAY_NONE\x10\x00\x12\x15\n\x11\x45NTRY_DELAY_SHORT\x10\x01\x12\x14\n\x10\x45NTRY_DELAY_LONG\x10\x02*\xa9\x01\n\nEnrollMode\x12\x18\n\x14\x45NROLL_MODE_DISABLED\x10\x00\x12\x16\n\x12SENSOR_ENROLL_MODE\x10\x01\x12\x14\n\x10WIFI_ENROLL_MODE\x10\x02\x12\x13\n\x0f\x42US_ENROLL_MODE\x10\x03\x12\x13\n\x0f\x41LL_ENROLL_MODE\x10\x04\x12\x13\n\x0fPANEL_PROG_MODE\x10\x05\x12\x14\n\x10PANEL_SETUP_MODE\x10\x06*\x9f\x01\n\x0f\x45nrollModeError\x12\x12\n\x0e\x45NROLL_SUCCESS\x10\x00\x12\x1d\n\x17\x45NROLL_ERR_INVALID_USER\x10\x9a\x85\x04\x12\x1c\n\x16\x45NROLL_ERR_INVALID_PIN\x10\x9c\x85\x04\x12\x1c\n\x16\x45NROLL_ERR_NOT_ALLOWED\x10\x99\x85\x04\x12\x1d\n\x17\x45NROLL_ERR_INVALID_MODE\x10\xc5\x84\x04\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -40,26 +40,26 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_ARMMANY'].fields_by_name['partition_num_list']._serialized_options = b'\272H\005\222\001\002\020\010'
   _globals['_ARMMANYRESP'].fields_by_name['arms']._loaded_options = None
   _globals['_ARMMANYRESP'].fields_by_name['arms']._serialized_options = b'\272H\005\222\001\002\020\010'
-  _globals['_SYSTEMGETERROR']._serialized_start=2491
-  _globals['_SYSTEMGETERROR']._serialized_end=2604
-  _globals['_SYSTEMWRITEERROR']._serialized_start=2606
-  _globals['_SYSTEMWRITEERROR']._serialized_end=2728
-  _globals['_ARMERROR']._serialized_start=2731
-  _globals['_ARMERROR']._serialized_end=3211
-  _globals['_ALARMERROR']._serialized_start=3214
-  _globals['_ALARMERROR']._serialized_end=3449
-  _globals['_ARMINGLEVEL']._serialized_start=3452
-  _globals['_ARMINGLEVEL']._serialized_end=3633
-  _globals['_ALARMTYPE']._serialized_start=3636
-  _globals['_ALARMTYPE']._serialized_end=3921
-  _globals['_SOUNDTYPE']._serialized_start=3924
-  _globals['_SOUNDTYPE']._serialized_end=4358
-  _globals['_ENTRYDELAYTYPE']._serialized_start=4360
-  _globals['_ENTRYDELAYTYPE']._serialized_end=4443
-  _globals['_ENROLLMODE']._serialized_start=4446
-  _globals['_ENROLLMODE']._serialized_end=4615
-  _globals['_ENROLLMODEERROR']._serialized_start=4618
-  _globals['_ENROLLMODEERROR']._serialized_end=4769
+  _globals['_SYSTEMGETERROR']._serialized_start=2522
+  _globals['_SYSTEMGETERROR']._serialized_end=2641
+  _globals['_SYSTEMWRITEERROR']._serialized_start=2644
+  _globals['_SYSTEMWRITEERROR']._serialized_end=2772
+  _globals['_ARMERROR']._serialized_start=2775
+  _globals['_ARMERROR']._serialized_end=3271
+  _globals['_ALARMERROR']._serialized_start=3274
+  _globals['_ALARMERROR']._serialized_end=3524
+  _globals['_ARMINGLEVEL']._serialized_start=3527
+  _globals['_ARMINGLEVEL']._serialized_end=3708
+  _globals['_ALARMTYPE']._serialized_start=3711
+  _globals['_ALARMTYPE']._serialized_end=4092
+  _globals['_SOUNDTYPE']._serialized_start=4095
+  _globals['_SOUNDTYPE']._serialized_end=4529
+  _globals['_ENTRYDELAYTYPE']._serialized_start=4531
+  _globals['_ENTRYDELAYTYPE']._serialized_end=4614
+  _globals['_ENROLLMODE']._serialized_start=4617
+  _globals['_ENROLLMODE']._serialized_end=4786
+  _globals['_ENROLLMODEERROR']._serialized_start=4789
+  _globals['_ENROLLMODEERROR']._serialized_end=4948
   _globals['_SYSTEMSTATUSGET']._serialized_start=88
   _globals['_SYSTEMSTATUSGET']._serialized_end=105
   _globals['_SYSTEMSTATUSGETRESP']._serialized_start=108
@@ -83,31 +83,31 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_SYSTEMTIMERSCONFIGGET']._serialized_start=1467
   _globals['_SYSTEMTIMERSCONFIGGET']._serialized_end=1490
   _globals['_SYSTEMTIMERSCONFIGGETRESP_WRITE']._serialized_start=1493
-  _globals['_SYSTEMTIMERSCONFIGGETRESP_WRITE']._serialized_end=1633
-  _globals['_SYSTEMTIMERSCONFIGWRITERESP']._serialized_start=1635
-  _globals['_SYSTEMTIMERSCONFIGWRITERESP']._serialized_end=1707
-  _globals['_ARM']._serialized_start=1710
-  _globals['_ARM']._serialized_end=1883
-  _globals['_ARMRESP']._serialized_start=1885
-  _globals['_ARMRESP']._serialized_end=1952
-  _globals['_ARMMANY']._serialized_start=1954
-  _globals['_ARMMANY']._serialized_end=2016
-  _globals['_ARMMANYRESP']._serialized_start=2018
-  _globals['_ARMMANYRESP']._serialized_end=2074
-  _globals['_SENDPANICALARM']._serialized_start=2076
-  _globals['_SENDPANICALARM']._serialized_end=2111
-  _globals['_SENDPANICALARMRESP']._serialized_start=2113
-  _globals['_SENDPANICALARMRESP']._serialized_end=2170
-  _globals['_SENDFIREALARM']._serialized_start=2172
-  _globals['_SENDFIREALARM']._serialized_end=2187
-  _globals['_SENDFIREALARMRESP']._serialized_start=2189
-  _globals['_SENDFIREALARMRESP']._serialized_end=2245
-  _globals['_SENDMEDICALALARM']._serialized_start=2247
-  _globals['_SENDMEDICALALARM']._serialized_end=2284
-  _globals['_SENDMEDICALALARMRESP']._serialized_start=2286
-  _globals['_SENDMEDICALALARMRESP']._serialized_end=2345
-  _globals['_SETENROLLMODE']._serialized_start=2347
-  _globals['_SETENROLLMODE']._serialized_end=2426
-  _globals['_SETENROLLMODERESP']._serialized_start=2428
-  _globals['_SETENROLLMODERESP']._serialized_end=2489
+  _globals['_SYSTEMTIMERSCONFIGGETRESP_WRITE']._serialized_end=1664
+  _globals['_SYSTEMTIMERSCONFIGWRITERESP']._serialized_start=1666
+  _globals['_SYSTEMTIMERSCONFIGWRITERESP']._serialized_end=1738
+  _globals['_ARM']._serialized_start=1741
+  _globals['_ARM']._serialized_end=1914
+  _globals['_ARMRESP']._serialized_start=1916
+  _globals['_ARMRESP']._serialized_end=1983
+  _globals['_ARMMANY']._serialized_start=1985
+  _globals['_ARMMANY']._serialized_end=2047
+  _globals['_ARMMANYRESP']._serialized_start=2049
+  _globals['_ARMMANYRESP']._serialized_end=2105
+  _globals['_SENDPANICALARM']._serialized_start=2107
+  _globals['_SENDPANICALARM']._serialized_end=2142
+  _globals['_SENDPANICALARMRESP']._serialized_start=2144
+  _globals['_SENDPANICALARMRESP']._serialized_end=2201
+  _globals['_SENDFIREALARM']._serialized_start=2203
+  _globals['_SENDFIREALARM']._serialized_end=2218
+  _globals['_SENDFIREALARMRESP']._serialized_start=2220
+  _globals['_SENDFIREALARMRESP']._serialized_end=2276
+  _globals['_SENDMEDICALALARM']._serialized_start=2278
+  _globals['_SENDMEDICALALARM']._serialized_end=2315
+  _globals['_SENDMEDICALALARMRESP']._serialized_start=2317
+  _globals['_SENDMEDICALALARMRESP']._serialized_end=2376
+  _globals['_SETENROLLMODE']._serialized_start=2378
+  _globals['_SETENROLLMODE']._serialized_end=2457
+  _globals['_SETENROLLMODERESP']._serialized_start=2459
+  _globals['_SETENROLLMODERESP']._serialized_end=2520
 # @@protoc_insertion_point(module_scope)
