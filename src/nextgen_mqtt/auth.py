@@ -234,31 +234,59 @@ class AuthClient:
         )
         response.raise_for_status()
 
-        data = response.json()
+        content_type = response.headers.get("content-type", "")
 
-        # Parse expiration
-        exp_str = data["exp"]
-        if isinstance(exp_str, str):
-            exp_str = exp_str.replace("Z", "+00:00")
-            expires_at = datetime.fromisoformat(exp_str)
-        else:
-            expires_at = datetime.fromtimestamp(exp_str)
+        if "application/json" in content_type:
+            data = response.json()
 
-        primary = DeviceTokenEndpoints(
-            mq=data["p"]["mq"],
-            ws=data["p"].get("ws"),
-        )
+            exp_str = data["exp"]
+            if isinstance(exp_str, str):
+                exp_str = exp_str.replace("Z", "+00:00")
+                expires_at = datetime.fromisoformat(exp_str)
+            else:
+                expires_at = datetime.fromtimestamp(exp_str)
 
-        secondary = None
-        if "s" in data and data["s"]:
-            secondary = DeviceTokenEndpoints(
-                mq=data["s"]["mq"],
-                ws=data["s"].get("ws"),
+            primary = DeviceTokenEndpoints(
+                mq=data["p"]["mq"],
+                ws=data["p"].get("ws"),
             )
 
+            secondary = None
+            if "s" in data and data["s"]:
+                secondary = DeviceTokenEndpoints(
+                    mq=data["s"]["mq"],
+                    ws=data["s"].get("ws"),
+                )
+
+            return DeviceToken(
+                token=data["tok"],
+                expires_at=expires_at,
+                primary=primary,
+                secondary=secondary,
+            )
+
+        # Protobuf response: field 1 = primary mq, 2 = secondary mq, 3 = token, 4 = exp
+        return self._parse_device_login_protobuf(response.content)
+
+    @staticmethod
+    def _parse_device_login_protobuf(data: bytes) -> "DeviceToken":
+        """Parse protobuf device login response using Helix proto definitions.
+
+        The response is a Helix message with field 404 (registration_write)
+        containing a RegistrationGetResp_Write with MQTT endpoints and JWT token.
+        """
+        from .generated.main_pb2 import Helix
+
+        helix = Helix()
+        helix.ParseFromString(data)
+        reg = helix.registration_write
+
+        primary = DeviceTokenEndpoints(mq=[reg.mqtt_primary])
+        secondary = DeviceTokenEndpoints(mq=[reg.mqtt_secondary]) if reg.mqtt_secondary else None
+
         return DeviceToken(
-            token=data["tok"],
-            expires_at=expires_at,
+            token=reg.jwt_token,
+            expires_at=datetime.fromtimestamp(reg.expiration),
             primary=primary,
             secondary=secondary,
         )
