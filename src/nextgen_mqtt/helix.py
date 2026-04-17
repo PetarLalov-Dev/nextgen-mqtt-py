@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from google.protobuf.message import Message
 
 from .generated.main_pb2 import Helix
-from .generated.topic_ranges import TOPIC_RANGES
+from .generated.topic_ranges import FIELD_ALIASES, TOPIC_RANGES
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +66,20 @@ class HelixMeta:
     message_name: str
     payload: Message
     message: Message
+    topic_template: str | None = None  # e.g. "{prefix}/s/p/{num}" from @mqtt.alias
+
+    def resolve_topic(self, prefix: str) -> str:
+        """Render the MQTT topic alias with {prefix} and (when present) {num}.
+
+        Falls back to f"{prefix}/{topic_code}" when no alias is known.
+        """
+        if not self.topic_template:
+            return f"{prefix}/{self.topic_code}"
+        num = getattr(self.payload, "num", 0)
+        try:
+            return self.topic_template.format(prefix=prefix, num=num)
+        except (KeyError, IndexError):
+            return f"{prefix}/{self.topic_code}"
 
 
 def _field_to_topic(field_name: str) -> str:
@@ -102,4 +116,5 @@ def parse_helix_message(data: bytes) -> HelixMeta:
         message_name=field_name,
         payload=getattr(helix, field_name),
         message=helix,
+        topic_template=FIELD_ALIASES.get(field_name),
     )

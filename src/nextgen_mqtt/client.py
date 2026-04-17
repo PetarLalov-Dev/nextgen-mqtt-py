@@ -338,7 +338,7 @@ class WebSocketConnection:
             helix = None
             try:
                 helix = parse_helix_message(raw)
-                topic = f"{serial}/{helix.topic_code}"
+                topic = helix.resolve_topic(serial)
             except Exception:
                 logger.debug("Failed to decode Helix message, using raw fallback", exc_info=True)
             yield MQTTMessage(
