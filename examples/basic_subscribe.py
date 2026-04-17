@@ -8,20 +8,37 @@ Usage:
     python examples/basic_subscribe.py 2529015 --clear-retained
     python examples/basic_subscribe.py 2529015 --clear-retained --max-num 32
     python examples/basic_subscribe.py 2529015 --filter r,s
+
+Interactive mode requires prompt_toolkit (included in dev extras).
 """
 
 import argparse
 import asyncio
+import html
 import logging
-import sys
+import time
+from pathlib import Path
 
+import websockets.exceptions
 from google.protobuf.json_format import MessageToDict
+from prompt_toolkit import PromptSession
+from prompt_toolkit.application.current import get_app
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.filters import has_completions
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.patch_stdout import patch_stdout
 
 from nextgen_mqtt import NextGenMQTTClient
 from nextgen_mqtt.colors import BOLD, GRAY, RST, WHITE, topic_color
+from nextgen_mqtt.generated.main_pb2 import Helix
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
+
+HISTORY_FILE = Path.home() / ".cache" / "nextgen_mqtt_interactive_history"
 
 # Retained topic aliases from main.proto @mqtt.unsolicited.alias annotations
 # where @mqtt.unsolicited.retained: True
@@ -36,6 +53,73 @@ RETAINED_TOPIC_TEMPLATES = [
     "cf/sy", "cf/p/{num}", "cf/z/{num}", "cf/io/{num}", "cf/pr/{num}",
     "cf/ha/{num}", "cf/u/{num}", "cf/in/{num}", "cf/if", "cf/m", "cf/to", "cf/cp",
 ]
+
+ARM_LEVELS = {
+    "disarm": 2, "off": 2,
+    "stay": 3,
+    "night": 4,
+    "away": 5,
+    "level6": 6, "l6": 6,
+    "level7": 7, "l7": 7,
+    "level8": 8, "l8": 8,
+}
+
+PGM_STATES = {"on": 1, "off": 0, "toggle": 2}
+
+# Domain tree: top-level domain → set of valid actions (empty = leaf, no action).
+# 'panel' is an alias of 'system'.
+DOMAINS: dict[str, set[str]] = {
+    "partition": {"status", "arm", "disarm"},
+    "zone":      {"status", "bypass", "unbypass"},
+    "system":    {"status"},
+    "panel":     {"status"},  # alias of system
+    "pgm":       set(),       # leaf: pgm <num> <on|off|toggle>
+}
+
+# Signatures keyed by (domain, action) or (domain,) for leaf domains.
+SIGNATURES: dict[tuple[str, ...], str] = {
+    ("partition", "status"):  "partition status [num] | partition status <start> <end>",
+    ("partition", "arm"):     "partition arm <num> <level> [pin] [user]   level=away|stay|night|disarm|int",
+    ("partition", "disarm"):  "partition disarm <num> [pin] [user]",
+    ("zone",      "status"):  "zone status [num] | zone status <start> <end>",
+    ("zone",      "bypass"):  "zone bypass <num> [part_auth=N] [pin=X] [user=N]",
+    ("zone",      "unbypass"):"zone unbypass <num> [part_auth=N] [pin=X] [user=N]",
+    ("system",    "status"):  "system status",
+    ("panel",     "status"):  "panel status  (alias of system status)",
+    ("pgm",):                 "pgm <num> <on|off|toggle>",
+}
+
+# Mini-signature hint when only a domain has been typed (no action yet).
+_DOMAIN_HINT: dict[str, str] = {
+    d: f"{d} <{' | '.join(sorted(actions))}>" if actions else SIGNATURES[(d,)]
+    for d, actions in DOMAINS.items()
+}
+
+HELP_TEXT = """Interactive commands (optional leading /):
+
+  <hex>                             send raw hex (spaces OK, e.g. '08 01 82 28')
+
+  partition
+      status [num] | [start end]    query one, range, or all partitions
+      arm <num> <level> [pin] [user]    level=away/stay/night/disarm/int
+      disarm <num> [pin] [user]
+
+  zone
+      status [num] | [start end]    query one, range, or all zones
+      bypass <num> [part_auth=N]
+      unbypass <num> [part_auth=N]
+
+  system                            (alias: panel)
+      status
+
+  pgm <num> <on|off|toggle>
+
+  /help, /?, ?, help                this text
+  /quit, q, Ctrl-D                  exit interactive mode"""
+
+_ARM_LEVEL_NAMES = sorted(ARM_LEVELS.keys())
+_PGM_STATE_NAMES = sorted(PGM_STATES.keys())
+_META_COMMANDS = ["/help", "/quit"]
 
 
 def expand_retained_topics(max_num: int) -> list[str]:
@@ -69,30 +153,286 @@ async def clear_retained(client: NextGenMQTTClient, serial: str, password: str, 
         print("Note: Direct MQTT (port 8883) may not be accessible from your network.")
         print("The MQTT broker may reject credentials from external networks.\n")
 
-async def interactive_sender(conn):
-    """Read hex payloads from stdin and send them."""
-    loop = asyncio.get_event_loop()
-    reader = asyncio.StreamReader()
-    await loop.connect_read_pipe(lambda: asyncio.StreamReaderProtocol(reader), sys.stdin)
 
-    print("Interactive mode: type hex payloads to send (empty line to skip, 'q' to quit)")
+def _parse_kv_args(tokens: list[str]) -> tuple[list[str], dict[str, str]]:
+    """Split tokens into (positional, {key: value})."""
+    positional: list[str] = []
+    kwargs: dict[str, str] = {}
+    for tok in tokens:
+        if "=" in tok:
+            k, v = tok.split("=", 1)
+            kwargs[k] = v
+        else:
+            positional.append(tok)
+    return positional, kwargs
+
+
+def _range_from_positional(positional: list[str]) -> tuple[int, int]:
+    """Parse: no args = all (1,0); one = that one (N,N); two = range."""
+    if len(positional) >= 2:
+        return int(positional[0]), int(positional[1])
+    if len(positional) == 1:
+        n = int(positional[0])
+        return n, n
+    return 1, 0
+
+
+def build_command_payload(domain: str, action: str | None, args: list[str], msg_id: int) -> tuple[bytes, str]:
+    """Build a Helix payload from a <domain> <action> command. Returns (bytes, description)."""
+    h = Helix()
+    h.msg_id = msg_id
+    positional, kwargs = _parse_kv_args(args)
+
+    if "pin" in kwargs:
+        h.pin = kwargs["pin"]
+    if "user" in kwargs:
+        h.user_number = int(kwargs["user"])
+
+    # --- partition ---
+    if domain == "partition":
+        if action == "status":
+            start, end = _range_from_positional(positional)
+            h.partition_status_get.num_start = start
+            h.partition_status_get.num_end = end
+            return h.SerializeToString(), f"partition_status_get {start}-{end or 'all'}"
+        if action in ("arm", "disarm"):
+            partition = int(positional[0]) if positional else 1
+            if action == "disarm":
+                level_name, level_val = "disarm", ARM_LEVELS["disarm"]
+                pin_idx, user_idx = 1, 2
+            else:
+                level_name = positional[1].lower() if len(positional) > 1 else "away"
+                level_val = ARM_LEVELS.get(level_name) or int(level_name)
+                pin_idx, user_idx = 2, 3
+            if "pin" not in kwargs and len(positional) > pin_idx:
+                h.pin = positional[pin_idx]
+            if "user" not in kwargs and len(positional) > user_idx:
+                h.user_number = int(positional[user_idx])
+            h.arm.partition_num = partition
+            h.arm.level = level_val
+            return h.SerializeToString(), f"{action} p={partition} level={level_name}"
+
+    # --- zone ---
+    if domain == "zone":
+        if action == "status":
+            start, end = _range_from_positional(positional)
+            h.zone_status_get.num_start = start
+            h.zone_status_get.num_end = end
+            return h.SerializeToString(), f"zone_status_get {start}-{end or 'all'}"
+        if action in ("bypass", "unbypass"):
+            if not positional:
+                raise ValueError(f"zone {action}: zone number required")
+            zone = int(positional[0])
+            h.zone_bypass.num = zone
+            h.zone_bypass.bypass = action == "bypass"
+            if "part_auth" in kwargs:
+                h.zone_bypass.partition_auth = int(kwargs["part_auth"])
+            return h.SerializeToString(), f"zone {action} num={zone}"
+
+    # --- system / panel (alias) ---
+    if domain in ("system", "panel"):
+        if action == "status":
+            h.system_status_get.SetInParent()
+            return h.SerializeToString(), f"{domain}_status_get"
+
+    # --- pgm (leaf — no action word, direct args) ---
+    if domain == "pgm":
+        if len(positional) < 2:
+            raise ValueError("pgm: expected <num> <on|off|toggle>")
+        num = int(positional[0])
+        state_name = positional[1].lower()
+        io_set_val = PGM_STATES.get(state_name)
+        if io_set_val is None:
+            raise ValueError(f"pgm: unknown state '{state_name}' (on/off/toggle)")
+        h.io_output_set.num = num
+        h.io_output_set.io_set = io_set_val
+        return h.SerializeToString(), f"pgm num={num} {state_name}"
+
+    raise ValueError(f"unknown command: {domain} {action or ''}".rstrip())
+
+
+class ReplCompleter(Completer):
+    """Context-sensitive completer: domain → action → sub-args."""
+
+    def get_completions(self, document, complete_event):  # noqa: ARG002
+        before = document.text_before_cursor
+
+        # idx 0 — first word completion matches raw text so `/h` can hit `/help`.
+        if " " not in before:
+            for c in sorted(DOMAINS) + _META_COMMANDS:
+                if c.startswith(before):
+                    yield Completion(c, start_position=-len(before))
+            return
+
+        tokens = before.lstrip("/").split()
+        if before.endswith(" "):
+            tokens.append("")
+        idx = len(tokens) - 1
+        domain = tokens[0].lower()
+        current = tokens[idx]
+
+        action = tokens[1].lower() if len(tokens) > 1 else ""
+        candidates: list[str] = []
+        if idx == 1:
+            # action for the given domain
+            candidates = sorted(DOMAINS.get(domain, set()))
+        elif domain == "pgm" and idx == 2:
+            # pgm <num> <state>
+            candidates = _PGM_STATE_NAMES
+        elif domain == "partition" and action == "arm" and idx == 3:
+            # partition arm <num> <level>
+            candidates = _ARM_LEVEL_NAMES
+
+        for c in candidates:
+            if c.startswith(current):
+                yield Completion(c, start_position=-len(current))
+
+
+def _bottom_toolbar():
+    """Shows the signature of the command currently being typed."""
+    try:
+        buf = get_app().current_buffer.document.text_before_cursor
+    except Exception:
+        return ""
+    tokens = buf.lstrip("/").split()
+    domain = tokens[0].lower() if tokens else ""
+    action = tokens[1].lower() if len(tokens) > 1 else None
+    sig = (
+        SIGNATURES.get((domain, action))
+        or SIGNATURES.get((domain,))
+        or _DOMAIN_HINT.get(domain)
+        or "tab=complete  hjkl=menu-nav  ctrl-r=search  ctrl-d=exit"
+    )
+    return HTML(f"<ansigray>{html.escape(sig)}</ansigray>")
+
+
+def _build_menu_keybindings() -> KeyBindings:
+    """hjkl for navigating the completion menu, active only while it's open."""
+    kb = KeyBindings()
+
+    @kb.add("j", filter=has_completions)
+    def _(event):
+        event.current_buffer.complete_next()
+
+    @kb.add("k", filter=has_completions)
+    def _(event):
+        event.current_buffer.complete_previous()
+
+    @kb.add("h", filter=has_completions)
+    def _(event):
+        event.current_buffer.complete_previous()
+
+    @kb.add("l", filter=has_completions)
+    def _(event):
+        event.current_buffer.complete_next()
+
+    return kb
+
+
+async def interactive_sender(conn, pending: dict[int, tuple[float, str]]):
+    """REPL: hex payloads or commands. Assigns msg_ids and registers them for response matching."""
+    HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    session: PromptSession[str] = PromptSession(
+        history=FileHistory(str(HISTORY_FILE)),
+        auto_suggest=AutoSuggestFromHistory(),
+        completer=ReplCompleter(),
+        complete_while_typing=True,
+        bottom_toolbar=_bottom_toolbar,
+        key_bindings=_build_menu_keybindings(),
+    )
+    next_msg_id = 1000
+
+    print("Interactive mode: type hex or /help. Ctrl-D to quit.")
     while True:
-        sys.stdout.write("> ")
-        sys.stdout.flush()
-        line = await reader.readline()
-        if not line:
+        try:
+            line = await session.prompt_async("> ")
+        except (EOFError, KeyboardInterrupt):
+            print()
             break
-        text = line.decode().strip()
-        if text.lower() == "q":
-            break
+        text = line.strip()
         if not text:
             continue
+        if text.lower() in ("q", "quit", "/quit", "/q"):
+            break
+        if text in ("/help", "/?", "?", "help"):
+            print(HELP_TEXT)
+            continue
+
+        parts = text.lstrip("/").split()
+        domain = parts[0].lower() if parts else ""
         try:
-            payload = bytes.fromhex(text)
+            if domain in DOMAINS:
+                msg_id = next_msg_id
+                next_msg_id += 1
+                if DOMAINS[domain]:
+                    # domain with actions (partition, zone, system, panel)
+                    if len(parts) < 2:
+                        raise ValueError(f"{domain}: action required (try tab)")
+                    action = parts[1].lower()
+                    if action not in DOMAINS[domain]:
+                        raise ValueError(f"{domain} {action}: unknown action")
+                    payload, desc = build_command_payload(domain, action, parts[2:], msg_id)
+                else:
+                    # leaf domain (pgm) — args follow directly
+                    payload, desc = build_command_payload(domain, None, parts[1:], msg_id)
+            elif text.startswith("/"):
+                raise ValueError(f"unknown command: /{domain} (try /help)")
+            else:
+                payload = bytes.fromhex(text)
+                try:
+                    parsed = Helix()
+                    parsed.ParseFromString(payload)
+                    msg_id = parsed.msg_id or None
+                except Exception:
+                    msg_id = None
+                desc = f"raw {len(payload)}b"
+        except Exception as e:
+            print(f"  {topic_color('e')}error:{RST} {e}")
+            continue
+
+        try:
             await conn.send(payload)
-            print(f"Sent {len(payload)} bytes")
-        except ValueError:
-            print(f"Invalid hex: {text}")
+        except websockets.exceptions.ConnectionClosed as e:
+            print(f"  {topic_color('e')}connection closed:{RST} {e}")
+            break
+        if msg_id is not None:
+            pending[msg_id] = (time.monotonic(), desc)
+        hex_preview = payload[:50].hex() + ("..." if len(payload) > 50 else "")
+        print(f"  {GRAY}→{RST} sent msg_id={msg_id} ({desc}) {GRAY}{len(payload)}b{RST}")
+        print(f"    {GRAY}hex:{RST}     {GRAY}{hex_preview}{RST}")
+
+
+async def _listener(conn, pending, topic_filter):
+    """Print incoming messages; match against pending msg_ids for latency tracking."""
+    try:
+        async for message in conn.messages():
+            _print_message(message, pending, topic_filter)
+    except websockets.exceptions.ConnectionClosed as e:
+        print(f"{topic_color('e')}connection closed:{RST} {e}")
+
+
+def _print_message(message, pending, topic_filter):
+    code = message.topic_type.value
+    if topic_filter and code not in topic_filter:
+        return
+    cc = topic_color(code)
+    ts = message.received_at.strftime("%H:%M:%S.%f")[:-3]
+    print(f"{GRAY}{ts}{RST} {cc}{BOLD}{message.topic}{RST} {GRAY}{len(message.payload)}b{RST}")
+    print(f"  {GRAY}hex:{RST}     {GRAY}{message.payload[:50].hex()}{'...' if len(message.payload) > 50 else ''}{RST}")
+    if message.helix:
+        h = message.helix
+        print(f"  {GRAY}message:{RST} {cc}{BOLD}{h.message_name}{RST} {GRAY}msg_id={h.msg_id} field={h.msg_field}{RST}")
+        match = pending.pop(h.msg_id, None)
+        if match:
+            elapsed_ms = (time.monotonic() - match[0]) * 1000
+            print(f"  {GRAY}↳ match:{RST} {WHITE}{match[1]}{RST} {GRAY}in {elapsed_ms:.0f}ms{RST}")
+        try:
+            payload_dict = MessageToDict(h.payload, preserving_proto_field_name=True)
+            if payload_dict:
+                print(f"  {GRAY}payload:{RST} {WHITE}{BOLD}{payload_dict}{RST}")
+        except Exception as e:
+            print(f"  {GRAY}error:{RST}   {topic_color('e')}{e}{RST}")
+    print()
 
 
 async def main():
@@ -110,6 +450,8 @@ async def main():
 
     print(f"Subscribing to device {args.serial} via WebSocket...")
 
+    pending: dict[int, tuple[float, str]] = {}
+
     async with NextGenMQTTClient.staging() as client:
         if args.clear_retained:
             await clear_retained(client, args.serial, args.password, args.secondary, args.max_num)
@@ -122,35 +464,18 @@ async def main():
                 print(f"Sending payload: {args.payload} ({len(payload)} bytes)")
                 await conn.send(payload)
 
-            if args.interactive:
-                sender_task = asyncio.create_task(interactive_sender(conn))
-            else:
-                sender_task = None
-
             print("Waiting for messages (Ctrl+C to exit)...\n")
 
-            try:
-                async for message in conn.messages():
-                    code = message.topic_type.value
-                    if topic_filter and code not in topic_filter:
-                        continue
-                    cc = topic_color(code)
-                    ts = message.received_at.strftime('%H:%M:%S.%f')[:-3]
-                    print(f"{GRAY}{ts}{RST} {cc}{BOLD}{message.topic}{RST} {GRAY}{len(message.payload)}b{RST}")
-                    print(f"  {GRAY}hex:{RST}     {GRAY}{message.payload[:50].hex()}{'...' if len(message.payload) > 50 else ''}{RST}")
-                    if message.helix:
-                        h = message.helix
-                        print(f"  {GRAY}message:{RST} {cc}{BOLD}{h.message_name}{RST} {GRAY}msg_id={h.msg_id} field={h.msg_field}{RST}")
-                        try:
-                            payload_dict = MessageToDict(h.payload, preserving_proto_field_name=True)
-                            if payload_dict:
-                                print(f"  {GRAY}payload:{RST} {WHITE}{BOLD}{payload_dict}{RST}")
-                        except Exception as e:
-                            print(f"  {GRAY}error:{RST}   {topic_color('e')}{e}{RST}")
-                    print()
-            finally:
-                if sender_task:
-                    sender_task.cancel()
+            if args.interactive:
+                # patch_stdout keeps the prompt line stable while messages scroll above it.
+                with patch_stdout(raw=True):
+                    listener_task = asyncio.create_task(_listener(conn, pending, topic_filter))
+                    try:
+                        await interactive_sender(conn, pending)
+                    finally:
+                        listener_task.cancel()
+            else:
+                await _listener(conn, pending, topic_filter)
 
 
 if __name__ == "__main__":

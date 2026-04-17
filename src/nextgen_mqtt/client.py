@@ -195,12 +195,9 @@ class NextGenMQTTClient:
         user_token = await self.get_user_token(device_serial, ttl_seconds=ttl_seconds)
         logger.info(f"Got user token, expires at {user_token.expires_at}")
 
-        # Get WebSocket URL from token response
+        # WebSocket URL from token response is already fully qualified (includes /v1/device/{serial}/ws).
         endpoints = user_token.secondary if use_secondary and user_token.secondary else user_token.primary
-        ws_base_url = endpoints.ws[0]
-
-        # Construct full WebSocket URL
-        ws_url = f"{ws_base_url}/v1/device/{device_serial}/ws"
+        ws_url = endpoints.ws[0]
         logger.info(f"Connecting to WebSocket: {ws_url}")
 
         # Build topic list for reference
