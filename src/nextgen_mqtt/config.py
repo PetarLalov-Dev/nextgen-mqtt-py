@@ -66,22 +66,10 @@ StagingEnvironment.STAGING = StagingEnvironment()
 
 
 # Device topic names for subscribing (FROM device perspective)
-# Note: Wildcards are limited on some brokers, so we use specific topics
+# Matches device-shard-api subscription pattern: cf/#, s/#, i/#, e, r
 DEVICE_TOPICS = [
-    "cf",  # Config
-    "s",   # Status
-    "i",   # Info
-    "r",   # Response
-    "e",   # Event
-]
-
-# Extended topics with wildcards (may not work on all broker shards)
-DEVICE_TOPICS_EXTENDED = [
-    "cf",    # Config - full topic
     "cf/#",  # Config - subtree
-    "s",     # Status - full topic
     "s/#",   # Status - subtree
-    "i",     # Info - full topic
     "i/#",   # Info - subtree
     "r",     # Response
     "e",     # Event

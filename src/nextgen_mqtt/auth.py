@@ -4,6 +4,7 @@ Handles OAuth2 token acquisition and user token creation.
 """
 
 import base64
+import struct
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -57,6 +58,50 @@ class UserToken:
     expires_at: datetime
     primary: UserTokenEndpoints
     secondary: UserTokenEndpoints | None = None
+
+
+def _decode_varint(buf: bytes, pos: int) -> tuple[int, int]:
+    """Decode a protobuf varint, return (value, new_pos)."""
+    result = 0
+    shift = 0
+    while True:
+        b = buf[pos]
+        result |= (b & 0x7F) << shift
+        pos += 1
+        if not (b & 0x80):
+            break
+        shift += 7
+    return result, pos
+
+
+def _decode_protobuf_fields(buf: bytes) -> dict[int, Any]:
+    """Decode protobuf wire format into {field_number: value}.
+
+    Length-delimited fields return raw bytes; varint fields return int.
+    Only keeps the last value for repeated field numbers.
+    """
+    fields: dict[int, Any] = {}
+    pos = 0
+    while pos < len(buf):
+        tag, pos = _decode_varint(buf, pos)
+        field_number = tag >> 3
+        wire_type = tag & 0x07
+        if wire_type == 0:  # varint
+            value, pos = _decode_varint(buf, pos)
+        elif wire_type == 2:  # length-delimited
+            length, pos = _decode_varint(buf, pos)
+            value = buf[pos : pos + length]
+            pos += length
+        elif wire_type == 1:  # 64-bit
+            value = struct.unpack_from("<Q", buf, pos)[0]
+            pos += 8
+        elif wire_type == 5:  # 32-bit
+            value = struct.unpack_from("<I", buf, pos)[0]
+            pos += 4
+        else:
+            break
+        fields[field_number] = value
+    return fields
 
 
 class AuthClient:
@@ -130,19 +175,28 @@ class AuthClient:
         self,
         device_serial: str,
         ttl_seconds: int | None = None,
-        globals_config: dict[str, Any] | None = None,
+        permissions: dict[str, Any] | None = None,
     ) -> UserToken:
         """Create a user token for device access.
 
         Args:
             device_serial: The device serial number.
             ttl_seconds: Token TTL in seconds (60-3600, default 900).
-            globals_config: Optional permissions dict, e.g.:
+            permissions: Optional permissions dict, e.g.:
                 {
-                    "can_view_events": True,
-                    "can_control_devices": True,
-                    "can_manage_users": False,
-                    "can_manage_devices": False
+                    "global": {
+                        "partitions": [1, 2, 3, 4],
+                        "zones": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        "haDevices": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                        "userNumber": 500
+                    },
+                    "partition": {
+                        "*": {
+                            "armingLevel": {...},
+                            "bypassZones": true,
+                            ...
+                        }
+                    }
                 }
 
         Returns:
@@ -158,9 +212,9 @@ class AuthClient:
 
         body: dict[str, Any] = {}
         if ttl_seconds is not None:
-            body["ttl_seconds"] = ttl_seconds
-        if globals_config is not None:
-            body["globals"] = globals_config
+            body["ttlSeconds"] = ttl_seconds
+        if permissions is not None:
+            body["permissions"] = permissions
 
         response = await client.post(
             f"{self.env.base_url}/v1/device/{device_serial}/user_token",
@@ -226,7 +280,7 @@ class AuthClient:
 
         response = await client.post(
             f"{self.env.base_url}/v1/device/{device_serial}/login",
-            headers={"Content-Type": "application/json"},
+            headers={"Content-Type": "application/json", "Accept": "application/json"},
             json={
                 "password": device_password,
                 "message_id": 1,
@@ -234,30 +288,48 @@ class AuthClient:
         )
         response.raise_for_status()
 
-        data = response.json()
-
-        # Parse expiration
-        exp_str = data["exp"]
-        if isinstance(exp_str, str):
-            exp_str = exp_str.replace("Z", "+00:00")
-            expires_at = datetime.fromisoformat(exp_str)
-        else:
-            expires_at = datetime.fromtimestamp(exp_str)
-
-        primary = DeviceTokenEndpoints(
-            mq=data["p"]["mq"],
-            ws=data["p"].get("ws"),
-        )
-
-        secondary = None
-        if "s" in data and data["s"]:
-            secondary = DeviceTokenEndpoints(
-                mq=data["s"]["mq"],
-                ws=data["s"].get("ws"),
+        content_type = response.headers.get("content-type", "")
+        if "json" in content_type:
+            data = response.json()
+            exp_str = data["exp"]
+            if isinstance(exp_str, str):
+                exp_str = exp_str.replace("Z", "+00:00")
+                expires_at = datetime.fromisoformat(exp_str)
+            else:
+                expires_at = datetime.fromtimestamp(exp_str)
+            primary = DeviceTokenEndpoints(
+                mq=data["p"]["mq"],
+                ws=data["p"].get("ws"),
+            )
+            secondary = None
+            if "s" in data and data["s"]:
+                secondary = DeviceTokenEndpoints(
+                    mq=data["s"]["mq"],
+                    ws=data["s"].get("ws"),
+                )
+            return DeviceToken(
+                token=data["tok"],
+                expires_at=expires_at,
+                primary=primary,
+                secondary=secondary,
             )
 
+        # Protobuf response: decode wire format
+        # Outer message field 404 contains sub-message with:
+        #   1=mq_secondary (string), 2=mq_primary (string),
+        #   3=token (string), 4=expiration (varint unix timestamp)
+        fields = _decode_protobuf_fields(response.content)
+        inner = _decode_protobuf_fields(fields[404])
+        mq_secondary_url = inner.get(1, b"").decode()
+        mq_primary_url = inner.get(2, b"").decode()
+        token = inner[3].decode()
+        expires_at = datetime.fromtimestamp(inner[4])
+
+        primary = DeviceTokenEndpoints(mq=[mq_primary_url])
+        secondary = DeviceTokenEndpoints(mq=[mq_secondary_url]) if mq_secondary_url else None
+
         return DeviceToken(
-            token=data["tok"],
+            token=token,
             expires_at=expires_at,
             primary=primary,
             secondary=secondary,
