@@ -23,9 +23,10 @@ _sym_db = _symbol_database.Default()
 
 
 from .buf.validate import validate_pb2 as buf_dot_validate_dot_validate__pb2
+from . import errors_pb2 as errors__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x63onnectivity.proto\x12\x0c\x63onnectivity\x1a\x1b\x62uf/validate/validate.proto\"\x1e\n\x07SyncGet\x12\x13\n\x0btotal_count\x18\x01 \x01(\r\"\xe0\x04\n\x0bSyncGetResp\x12\x1b\n\x13system_status_count\x18\x01 \x01(\r\x12\x19\n\x11system_info_count\x18\x02 \x01(\r\x12\x1b\n\x13system_config_count\x18\x03 \x01(\r\x12\x19\n\x11zone_status_count\x18\x04 \x01(\r\x12\x17\n\x0fzone_info_count\x18\x05 \x01(\r\x12\x19\n\x11zone_config_count\x18\x06 \x01(\r\x12\x1e\n\x16partition_status_count\x18\x07 \x01(\r\x12\x1c\n\x14partition_info_count\x18\x08 \x01(\r\x12\x1e\n\x16partition_config_count\x18\t \x01(\r\x12\x1f\n\x17peripheral_status_count\x18\n \x01(\r\x12\x1d\n\x15peripheral_info_count\x18\x0b \x01(\r\x12\x1f\n\x17peripheral_config_count\x18\x0c \x01(\r\x12\x17\n\x0fio_status_count\x18\r \x01(\r\x12\x15\n\rio_info_count\x18\x0e \x01(\r\x12\x17\n\x0fio_config_count\x18\x0f \x01(\r\x12\x17\n\x0fha_status_count\x18\x10 \x01(\r\x12\x15\n\rha_info_count\x18\x11 \x01(\r\x12\x17\n\x0fha_config_count\x18\x12 \x01(\r\x12\x1e\n\x16interface_status_count\x18\x13 \x01(\r\x12\x1c\n\x14interface_info_count\x18\x14 \x01(\r\x12\x1e\n\x16interface_config_count\x18\x15 \x01(\r\"5\n\x11RetainedTopicsGet\x12 \n\x0fretained_topics\x18\x01 \x01(\x0c\x42\x07\xbaH\x04z\x02\x18\x15\"F\n\x15RetainedTopicsGetResp\x12-\n\x05\x65rror\x18\x01 \x01(\x0e\x32\x1e.connectivity.RetainedGetError\"\x11\n\x0fRegistrationGet\"\xca\x01\n\x19RegistrationGetResp_Write\x12\x31\n\x05\x65rror\x18\x64 \x01(\x0e\x32\".connectivity.RegistrationGetError\x12\x1d\n\x0cmqtt_primary\x18\x01 \x01(\tB\x07\xbaH\x04r\x02\x18>\x12\x1f\n\x0emqtt_secondary\x18\x02 \x01(\tB\x07\xbaH\x04r\x02\x18>\x12\x11\n\tjwt_token\x18\x03 \x01(\t\x12\x12\n\nexpiration\x18\x04 \x01(\r\x12\x13\n\x0breg_backoff\x18\x05 \x01(\r\"L\n\x15RegistrationWriteResp\x12\x33\n\x05\x65rror\x18\x64 \x01(\x0e\x32$.connectivity.RegistrationWriteError\"\x0f\n\rMqttConfigGet\"\x81\x01\n\x17MqttConfigGetResp_Write\x12/\n\x05\x65rror\x18\x64 \x01(\x0e\x32 .connectivity.MqttConfigGetError\x12\x19\n\x11keepalive_lan_sec\x18\x01 \x01(\r\x12\x1a\n\x12keepalive_cell_sec\x18\x02 \x01(\r\"H\n\x13MqttConfigWriteResp\x12\x31\n\x05\x65rror\x18\x64 \x01(\x0e\x32\".connectivity.MqttConfigWriteError*N\n\x10RetainedGetError\x12\x18\n\x14RETAINED_GET_SUCCESS\x10\x00\x12 \n\x1cRETAINED_GET_ERR_INVALID_NUM\x10\x01*K\n\x14RegistrationGetError\x12\x13\n\x0fREG_GET_SUCCESS\x10\x00\x12\x1e\n\x1aREG_GET_ERR_INVALID_CONFIG\x10\x01*Q\n\x16RegistrationWriteError\x12\x15\n\x11REG_WRITE_SUCCESS\x10\x00\x12 \n\x1cREG_WRITE_ERR_INVALID_CONFIG\x10\x01*i\n\x12MqttConfigGetError\x12\x14\n\x10MQTT_GET_SUCCESS\x10\x00\x12\x1e\n\x1aMQTT_GET_ERR_NOT_AVAILABLE\x10\x01\x12\x1d\n\x19MQTT_GET_ERR_INVALID_USER\x10\x02*\x92\x01\n\x14MqttConfigWriteError\x12\x16\n\x12MQTT_WRITE_SUCCESS\x10\x00\x12!\n\x1dMQTT_WRITE_ERR_INVALID_CONFIG\x10\x01\x12\x1e\n\x1aMQTT_WRITE_ERR_NOT_ALLOWED\x10\x02\x12\x1f\n\x1bMQTT_WRITE_ERR_INVALID_USER\x10\x03\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x63onnectivity.proto\x1a\x1b\x62uf/validate/validate.proto\x1a\x0c\x65rrors.proto\"$\n\rSyncCountsGet\x12\x13\n\x0btotal_count\x18\x01 \x01(\r\"\xdf\x04\n\nSyncCounts\x12\x1b\n\x13system_status_count\x18\x01 \x01(\r\x12\x19\n\x11system_info_count\x18\x02 \x01(\r\x12\x1b\n\x13system_config_count\x18\x03 \x01(\r\x12\x19\n\x11zone_status_count\x18\x04 \x01(\r\x12\x17\n\x0fzone_info_count\x18\x05 \x01(\r\x12\x19\n\x11zone_config_count\x18\x06 \x01(\r\x12\x1e\n\x16partition_status_count\x18\x07 \x01(\r\x12\x1c\n\x14partition_info_count\x18\x08 \x01(\r\x12\x1e\n\x16partition_config_count\x18\t \x01(\r\x12\x1f\n\x17peripheral_status_count\x18\n \x01(\r\x12\x1d\n\x15peripheral_info_count\x18\x0b \x01(\r\x12\x1f\n\x17peripheral_config_count\x18\x0c \x01(\r\x12\x17\n\x0fio_status_count\x18\r \x01(\r\x12\x15\n\rio_info_count\x18\x0e \x01(\r\x12\x17\n\x0fio_config_count\x18\x0f \x01(\r\x12\x17\n\x0fha_status_count\x18\x10 \x01(\r\x12\x15\n\rha_info_count\x18\x11 \x01(\r\x12\x17\n\x0fha_config_count\x18\x12 \x01(\r\x12\x1e\n\x16interface_status_count\x18\x13 \x01(\r\x12\x1c\n\x14interface_info_count\x18\x14 \x01(\r\x12\x1e\n\x16interface_config_count\x18\x15 \x01(\r\"5\n\x11RetainedTopicsGet\x12 \n\x0fretained_topics\x18\x01 \x01(\x0c\x42\x07\xbaH\x04z\x02\x18\x15\"*\n\x0eRetainedTopics\x12\x18\n\x05\x65rror\x18\x64 \x01(\x0e\x32\t.GetError\"\xc1\x01\n\x10MqttRegistration\x12\x1d\n\x0cmqtt_primary\x18\x01 \x01(\tB\x07\xbaH\x04r\x02\x18>\x12\x1f\n\x0emqtt_secondary\x18\x02 \x01(\tB\x07\xbaH\x04r\x02\x18>\x12\x11\n\tjwt_token\x18\x03 \x01(\t\x12\x12\n\nexpiration\x18\x04 \x01(\r\x12\x13\n\x0breg_backoff\x18\x05 \x01(\r\x12\x17\n\x06prefix\x18\x06 \x01(\tB\x07\xbaH\x04r\x02\x18\x0f\x12\x18\n\x05\x65rror\x18\x64 \x01(\x0e\x32\t.GetError\"]\n\nMqttConfig\x12\x19\n\x11keepalive_lan_sec\x18\x01 \x01(\r\x12\x1a\n\x12keepalive_cell_sec\x18\x02 \x01(\r\x12\x18\n\x05\x65rror\x18\x64 \x01(\x0e\x32\t.GetError\"P\n\rMqttBrokerSet\x12\x1d\n\x06\x62roker\x18\x01 \x01(\x0e\x32\x0b.MqttBrokerH\x00\x12\x16\n\x03url\x18\x02 \x01(\tB\x07\xbaH\x04r\x02\x18>H\x00\x42\x08\n\x06target*c\n\nMqttBroker\x12\x12\n\x0e\x42ROKER_NOT_SET\x10\x00\x12\x12\n\x0e\x42ROKER_PRIMARY\x10\x01\x12\x14\n\x10\x42ROKER_SECONDARY\x10\x02\x12\x17\n\x13\x42ROKER_REGISTRATION\x10\x03\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,38 +35,28 @@ if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_RETAINEDTOPICSGET'].fields_by_name['retained_topics']._loaded_options = None
   _globals['_RETAINEDTOPICSGET'].fields_by_name['retained_topics']._serialized_options = b'\272H\004z\002\030\025'
-  _globals['_REGISTRATIONGETRESP_WRITE'].fields_by_name['mqtt_primary']._loaded_options = None
-  _globals['_REGISTRATIONGETRESP_WRITE'].fields_by_name['mqtt_primary']._serialized_options = b'\272H\004r\002\030>'
-  _globals['_REGISTRATIONGETRESP_WRITE'].fields_by_name['mqtt_secondary']._loaded_options = None
-  _globals['_REGISTRATIONGETRESP_WRITE'].fields_by_name['mqtt_secondary']._serialized_options = b'\272H\004r\002\030>'
-  _globals['_RETAINEDGETERROR']._serialized_start=1360
-  _globals['_RETAINEDGETERROR']._serialized_end=1438
-  _globals['_REGISTRATIONGETERROR']._serialized_start=1440
-  _globals['_REGISTRATIONGETERROR']._serialized_end=1515
-  _globals['_REGISTRATIONWRITEERROR']._serialized_start=1517
-  _globals['_REGISTRATIONWRITEERROR']._serialized_end=1598
-  _globals['_MQTTCONFIGGETERROR']._serialized_start=1600
-  _globals['_MQTTCONFIGGETERROR']._serialized_end=1705
-  _globals['_MQTTCONFIGWRITEERROR']._serialized_start=1708
-  _globals['_MQTTCONFIGWRITEERROR']._serialized_end=1854
-  _globals['_SYNCGET']._serialized_start=65
-  _globals['_SYNCGET']._serialized_end=95
-  _globals['_SYNCGETRESP']._serialized_start=98
-  _globals['_SYNCGETRESP']._serialized_end=706
-  _globals['_RETAINEDTOPICSGET']._serialized_start=708
-  _globals['_RETAINEDTOPICSGET']._serialized_end=761
-  _globals['_RETAINEDTOPICSGETRESP']._serialized_start=763
-  _globals['_RETAINEDTOPICSGETRESP']._serialized_end=833
-  _globals['_REGISTRATIONGET']._serialized_start=835
-  _globals['_REGISTRATIONGET']._serialized_end=852
-  _globals['_REGISTRATIONGETRESP_WRITE']._serialized_start=855
-  _globals['_REGISTRATIONGETRESP_WRITE']._serialized_end=1057
-  _globals['_REGISTRATIONWRITERESP']._serialized_start=1059
-  _globals['_REGISTRATIONWRITERESP']._serialized_end=1135
-  _globals['_MQTTCONFIGGET']._serialized_start=1137
-  _globals['_MQTTCONFIGGET']._serialized_end=1152
-  _globals['_MQTTCONFIGGETRESP_WRITE']._serialized_start=1155
-  _globals['_MQTTCONFIGGETRESP_WRITE']._serialized_end=1284
-  _globals['_MQTTCONFIGWRITERESP']._serialized_start=1286
-  _globals['_MQTTCONFIGWRITERESP']._serialized_end=1358
+  _globals['_MQTTREGISTRATION'].fields_by_name['mqtt_primary']._loaded_options = None
+  _globals['_MQTTREGISTRATION'].fields_by_name['mqtt_primary']._serialized_options = b'\272H\004r\002\030>'
+  _globals['_MQTTREGISTRATION'].fields_by_name['mqtt_secondary']._loaded_options = None
+  _globals['_MQTTREGISTRATION'].fields_by_name['mqtt_secondary']._serialized_options = b'\272H\004r\002\030>'
+  _globals['_MQTTREGISTRATION'].fields_by_name['prefix']._loaded_options = None
+  _globals['_MQTTREGISTRATION'].fields_by_name['prefix']._serialized_options = b'\272H\004r\002\030\017'
+  _globals['_MQTTBROKERSET'].fields_by_name['url']._loaded_options = None
+  _globals['_MQTTBROKERSET'].fields_by_name['url']._serialized_options = b'\272H\004r\002\030>'
+  _globals['_MQTTBROKER']._serialized_start=1185
+  _globals['_MQTTBROKER']._serialized_end=1284
+  _globals['_SYNCCOUNTSGET']._serialized_start=65
+  _globals['_SYNCCOUNTSGET']._serialized_end=101
+  _globals['_SYNCCOUNTS']._serialized_start=104
+  _globals['_SYNCCOUNTS']._serialized_end=711
+  _globals['_RETAINEDTOPICSGET']._serialized_start=713
+  _globals['_RETAINEDTOPICSGET']._serialized_end=766
+  _globals['_RETAINEDTOPICS']._serialized_start=768
+  _globals['_RETAINEDTOPICS']._serialized_end=810
+  _globals['_MQTTREGISTRATION']._serialized_start=813
+  _globals['_MQTTREGISTRATION']._serialized_end=1006
+  _globals['_MQTTCONFIG']._serialized_start=1008
+  _globals['_MQTTCONFIG']._serialized_end=1101
+  _globals['_MQTTBROKERSET']._serialized_start=1103
+  _globals['_MQTTBROKERSET']._serialized_end=1183
 # @@protoc_insertion_point(module_scope)

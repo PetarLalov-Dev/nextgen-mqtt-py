@@ -22,21 +22,28 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from . import errors_pb2 as errors__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0c\x63ommon.proto\x12\x06\x63ommon\"=\n\x0bTemperature\x12 \n\x05scale\x18\x01 \x01(\x0e\x32\x11.common.TempScale\x12\x0c\n\x04temp\x18\x02 \x01(\x05\".\n\nMinMaxSize\x12\x0f\n\x07minimum\x18\x01 \x01(\r\x12\x0f\n\x07maximum\x18\x02 \x01(\r\"9\n\tTimeOfDay\x12\x0c\n\x04hour\x18\x01 \x01(\r\x12\x0e\n\x06minute\x18\x02 \x01(\r\x12\x0e\n\x06second\x18\x03 \x01(\r*5\n\tTempScale\x12\x10\n\x0cTEMP_NOT_SET\x10\x00\x12\n\n\x06TEMP_F\x10\x01\x12\n\n\x06TEMP_C\x10\x02\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0c\x63ommon.proto\x1a\x0c\x65rrors.proto\"\x05\n\x03Get\"-\n\x07GetMany\x12\x11\n\tnum_start\x18\x01 \x01(\r\x12\x0f\n\x07num_end\x18\x02 \x01(\r\"6\n\nConfigResp\x12\x0b\n\x03num\x18\x01 \x01(\r\x12\x1b\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x0c.ConfigError\"6\n\x0bTemperature\x12\x19\n\x05scale\x18\x01 \x01(\x0e\x32\n.TempScale\x12\x0c\n\x04temp\x18\x02 \x01(\x05\".\n\nMinMaxSize\x12\x0f\n\x07minimum\x18\x01 \x01(\r\x12\x0f\n\x07maximum\x18\x02 \x01(\r\"9\n\tTimeOfDay\x12\x0c\n\x04hour\x18\x01 \x01(\r\x12\x0e\n\x06minute\x18\x02 \x01(\r\x12\x0e\n\x06second\x18\x03 \x01(\r*5\n\tTempScale\x12\x10\n\x0cTEMP_NOT_SET\x10\x00\x12\n\n\x06TEMP_F\x10\x01\x12\n\n\x06TEMP_C\x10\x02\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'common_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_TEMPSCALE']._serialized_start=194
-  _globals['_TEMPSCALE']._serialized_end=247
-  _globals['_TEMPERATURE']._serialized_start=24
-  _globals['_TEMPERATURE']._serialized_end=85
-  _globals['_MINMAXSIZE']._serialized_start=87
-  _globals['_MINMAXSIZE']._serialized_end=133
-  _globals['_TIMEOFDAY']._serialized_start=135
-  _globals['_TIMEOFDAY']._serialized_end=192
+  _globals['_TEMPSCALE']._serialized_start=303
+  _globals['_TEMPSCALE']._serialized_end=356
+  _globals['_GET']._serialized_start=30
+  _globals['_GET']._serialized_end=35
+  _globals['_GETMANY']._serialized_start=37
+  _globals['_GETMANY']._serialized_end=82
+  _globals['_CONFIGRESP']._serialized_start=84
+  _globals['_CONFIGRESP']._serialized_end=138
+  _globals['_TEMPERATURE']._serialized_start=140
+  _globals['_TEMPERATURE']._serialized_end=194
+  _globals['_MINMAXSIZE']._serialized_start=196
+  _globals['_MINMAXSIZE']._serialized_end=242
+  _globals['_TIMEOFDAY']._serialized_start=244
+  _globals['_TIMEOFDAY']._serialized_end=301
 # @@protoc_insertion_point(module_scope)
