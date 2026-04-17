@@ -32,11 +32,38 @@ async def main():
         user_token = await auth.create_user_token(
             device_serial=device_serial,
             ttl_seconds=3600,
-            globals_config={
-                "can_view_events": True,
-                "can_control_devices": True,
-                "can_manage_users": False,
-                "can_manage_devices": False,
+            permissions={
+                "global": {
+                    "partitions": [1, 2, 3, 4],
+                    "zones": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                    "haDevices": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                    "userNumber": 500,
+                },
+                "partition": {
+                    "*": {
+                        "armingLevel": {
+                            "disarm": True,
+                            "away": True,
+                            "stay": True,
+                            "night": True,
+                            "level6": True,
+                            "level7": True,
+                            "level8": True,
+                        },
+                        "bypassZones": True,
+                        "confirmAlarms": True,
+                        "controlChimeMode": True,
+                        "controlOutputs": True,
+                        "manageScenes": True,
+                        "manageUsers": True,
+                        "manageZwaveDevices": True,
+                        "master": True,
+                        "silenceTroubleBeeps": True,
+                        "systemTest": True,
+                        "viewHistory": True,
+                        "zoneSensorReset": True,
+                    }
+                },
             },
         )
         print(f"  Expires at: {user_token.expires_at}")
