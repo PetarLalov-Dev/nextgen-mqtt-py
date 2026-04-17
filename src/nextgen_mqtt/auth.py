@@ -4,7 +4,6 @@ Handles OAuth2 token acquisition and user token creation.
 """
 
 import base64
-import struct
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -12,6 +11,7 @@ from typing import Any
 import httpx
 
 from .config import Environment
+from .generated.main_pb2 import Helix
 
 
 @dataclass
@@ -60,48 +60,9 @@ class UserToken:
     secondary: UserTokenEndpoints | None = None
 
 
-def _decode_varint(buf: bytes, pos: int) -> tuple[int, int]:
-    """Decode a protobuf varint, return (value, new_pos)."""
-    result = 0
-    shift = 0
-    while True:
-        b = buf[pos]
-        result |= (b & 0x7F) << shift
-        pos += 1
-        if not (b & 0x80):
-            break
-        shift += 7
-    return result, pos
-
-
-def _decode_protobuf_fields(buf: bytes) -> dict[int, Any]:
-    """Decode protobuf wire format into {field_number: value}.
-
-    Length-delimited fields return raw bytes; varint fields return int.
-    Only keeps the last value for repeated field numbers.
-    """
-    fields: dict[int, Any] = {}
-    pos = 0
-    while pos < len(buf):
-        tag, pos = _decode_varint(buf, pos)
-        field_number = tag >> 3
-        wire_type = tag & 0x07
-        if wire_type == 0:  # varint
-            value, pos = _decode_varint(buf, pos)
-        elif wire_type == 2:  # length-delimited
-            length, pos = _decode_varint(buf, pos)
-            value = buf[pos : pos + length]
-            pos += length
-        elif wire_type == 1:  # 64-bit
-            value = struct.unpack_from("<Q", buf, pos)[0]
-            pos += 8
-        elif wire_type == 5:  # 32-bit
-            value = struct.unpack_from("<I", buf, pos)[0]
-            pos += 4
-        else:
-            break
-        fields[field_number] = value
-    return fields
+# Helix oneof fields that carry an MqttRegistration payload on device login.
+# v1.0.22 uses registration_get_resp; legacy v1.0.21 used registration_write.
+_REGISTRATION_FIELDS = ("registration_get_resp", "registration_write")
 
 
 class AuthClient:
@@ -314,23 +275,21 @@ class AuthClient:
                 secondary=secondary,
             )
 
-        # Protobuf response: decode wire format
-        # Outer message field 404 contains sub-message with:
-        #   1=mq_secondary (string), 2=mq_primary (string),
-        #   3=token (string), 4=expiration (varint unix timestamp)
-        fields = _decode_protobuf_fields(response.content)
-        inner = _decode_protobuf_fields(fields[404])
-        mq_secondary_url = inner.get(1, b"").decode()
-        mq_primary_url = inner.get(2, b"").decode()
-        token = inner[3].decode()
-        expires_at = datetime.fromtimestamp(inner[4])
+        # Protobuf response: parse a Helix message carrying MqttRegistration.
+        # v1.0.22 routes this via registration_get_resp; v1.0.21 used registration_write.
+        helix = Helix()
+        helix.ParseFromString(response.content)
+        which = helix.WhichOneof("msg")
+        if which not in _REGISTRATION_FIELDS:
+            raise ValueError(f"unexpected Helix oneof in device_login response: {which!r}")
+        reg = getattr(helix, which)
 
-        primary = DeviceTokenEndpoints(mq=[mq_primary_url])
-        secondary = DeviceTokenEndpoints(mq=[mq_secondary_url]) if mq_secondary_url else None
+        primary = DeviceTokenEndpoints(mq=[reg.mqtt_primary])
+        secondary = DeviceTokenEndpoints(mq=[reg.mqtt_secondary]) if reg.mqtt_secondary else None
 
         return DeviceToken(
-            token=token,
-            expires_at=expires_at,
+            token=reg.jwt_token,
+            expires_at=datetime.fromtimestamp(reg.expiration),
             primary=primary,
             secondary=secondary,
         )

@@ -19,6 +19,7 @@ class TopicType(Enum):
     EVENT = "e"
     CONFIG = "cf"
     CONFIG_DESIRED = "cd"
+    CONFIG_DESIRED_RESP = "cdr"
     STATUS = "s"
     INFO = "i"
     UNKNOWN = "unknown"

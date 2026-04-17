@@ -115,11 +115,14 @@ RANGE_PATTERN = re.compile(r"@mqtt\.range\.(\w+):\s*(\d+)-(\d+)")
 # Map annotation names to topic codes
 RANGE_NAME_TO_CODE = {
     "event": "e",
-    "status_info": "s/i",
+    "status_info": "s/i",  # legacy (pre-v1.0.22)
+    "status": "s",
+    "info": "i",
     "config": "cf",
     "config_desired": "cd",
-    "cmd_resp": "r",
     "cmd": "c",
+    "cmd_resp": "r",
+    "config_desired_resp": "cdr",
 }
 
 

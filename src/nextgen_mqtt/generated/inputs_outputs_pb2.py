@@ -23,71 +23,54 @@ _sym_db = _symbol_database.Default()
 
 
 from .buf.validate import validate_pb2 as buf_dot_validate_dot_validate__pb2
+from . import errors_pb2 as errors__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14inputs_outputs.proto\x12\x08ins_outs\x1a\x1b\x62uf/validate/validate.proto\"&\n\x14InputOutputStatusGet\x12\x0e\n\x06io_num\x18\x01 \x01(\r\"\x82\x01\n\x18InputOutputStatusGetResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.ins_outs.IoGetError\x12\x0e\n\x06io_num\x18\x01 \x01(\r\x12 \n\x05state\x18\x02 \x01(\x0e\x32\x11.ins_outs.IoState\x12\x0f\n\x07trouble\x18\x03 \x01(\x08\"Y\n\x18InputOutputStatusGetMany\x12\x13\n\x0bio_num_list\x18\x01 \x03(\r\x12\x14\n\x0cio_num_start\x18\x02 \x01(\r\x12\x12\n\nio_num_end\x18\x03 \x01(\r\"U\n\x1cInputOutputStatusGetManyResp\x12\x35\n\tio_status\x18\x01 \x03(\x0b\x32\".ins_outs.InputOutputStatusGetResp\"$\n\x12InputOutputInfoGet\x12\x0e\n\x06io_num\x18\x01 \x01(\r\"P\n\x16InputOutputInfoGetResp\x12&\n\x08response\x18\x64 \x01(\x0e\x32\x14.ins_outs.IoGetError\x12\x0e\n\x06io_num\x18\x01 \x01(\r\"W\n\x16InputOutputInfoGetMany\x12\x14\n\x0cio_num_start\x18\x01 \x01(\r\x12\x12\n\nio_num_end\x18\x02 \x01(\r\x12\x13\n\x0bio_num_list\x18\x03 \x03(\r\"O\n\x1aInputOutputInfoGetManyResp\x12\x31\n\x07io_info\x18\x01 \x03(\x0b\x32 .ins_outs.InputOutputInfoGetResp\"&\n\x14InputOutputConfigGet\x12\x0e\n\x06io_num\x18\x01 \x01(\r\"\xa9\x03\n\x1eInputOutputConfigGetResp_Write\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.ins_outs.IoGetError\x12\x0e\n\x06io_num\x18\x01 \x01(\r\x12\x15\n\x04name\x18\x02 \x01(\tB\x07\xbaH\x04r\x02( \x12\x1f\n\x0epartition_nums\x18\x03 \x01(\x0c\x42\x07\xbaH\x04z\x02\x18\x08\x12\x0f\n\x07\x65nabled\x18\x04 \x01(\x08\x12&\n\x05input\x18\x05 \x01(\x0b\x32\x15.ins_outs.InputConfigH\x00\x12\x34\n\x10output_open_high\x18\x06 \x01(\x0b\x32\x18.ins_outs.OutputOpenHighH\x00\x12\x32\n\x0foutput_open_low\x18\x07 \x01(\x0b\x32\x17.ins_outs.OutputOpenLowH\x00\x12.\n\x0fon_board_io_num\x18\n \x01(\x0b\x32\x13.ins_outs.IoOnBoardH\x01\x12\x32\n\x12on_expander_io_num\x18\x0b \x01(\x0b\x32\x14.ins_outs.IoExpanderH\x01\x42\t\n\x07hw_typeB\x08\n\x06source\"S\n\x1aInputOutputConfigWriteResp\x12%\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x16.ins_outs.IoWriteError\x12\x0e\n\x06io_num\x18\x01 \x01(\r\"Y\n\x18InputOutputConfigGetMany\x12\x13\n\x0bio_num_list\x18\x01 \x03(\r\x12\x14\n\x0cio_num_start\x18\x02 \x01(\r\x12\x12\n\nio_num_end\x18\x03 \x01(\r\"\\\n\x1cInputOutputConfigGetManyResp\x12<\n\nio_configs\x18\x01 \x03(\x0b\x32(.ins_outs.InputOutputConfigGetResp_Write\"A\n\tOutputSet\x12\x0e\n\x06io_num\x18\x01 \x01(\r\x12$\n\x06io_set\x18\x02 \x01(\x0e\x32\x14.ins_outs.IoSetValue\"f\n\rOutputSetResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.ins_outs.IoSetError\x12\x0e\n\x06io_num\x18\x01 \x01(\r\x12 \n\x05state\x18\x02 \x01(\x0e\x32\x11.ins_outs.IoState\"_\n\x12OutputMomentarySet\x12\x0e\n\x06io_num\x18\x01 \x01(\r\x12$\n\x06io_set\x18\x02 \x01(\x0e\x32\x14.ins_outs.IoSetValue\x12\x13\n\x0b\x64uration_ms\x18\x03 \x01(\r\"o\n\x16OutputMomentarySetResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.ins_outs.IoSetError\x12\x0e\n\x06io_num\x18\x01 \x01(\r\x12 \n\x05state\x18\x02 \x01(\x0e\x32\x11.ins_outs.IoState\"\r\n\x0bInputConfig\"\x10\n\x0eOutputOpenHigh\"\x0f\n\rOutputOpenLow\"!\n\tIoOnBoard\x12\x14\n\x0con_board_num\x18\x01 \x01(\r\"@\n\nIoExpander\x12\x16\n\x0eperipheral_num\x18\x01 \x01(\r\x12\x1a\n\x12on_expander_io_num\x18\x02 \x01(\r*@\n\nIoSetValue\x12\x0e\n\nIO_SET_LOW\x10\x00\x12\x0f\n\x0bIO_SET_HIGH\x10\x01\x12\x11\n\rIO_SET_TOGGLE\x10\x02*T\n\nIoGetError\x12\x0f\n\x0bGET_SUCCESS\x10\x00\x12\x19\n\x13GET_ERR_INVALID_NUM\x10\xb6\x84\x04\x12\x1a\n\x14GET_ERR_INVALID_USER\x10\x9a\x85\x04*\x99\x01\n\x0cIoWriteError\x12\x11\n\rWRITE_SUCCESS\x10\x00\x12\x1b\n\x15WRITE_ERR_INVALID_NUM\x10\xb6\x84\x04\x12\x1e\n\x18WRITE_ERR_INVALID_CONFIG\x10\xb7\x84\x04\x12\x1b\n\x15WRITE_ERR_NOT_ALLOWED\x10\x99\x85\x04\x12\x1c\n\x16WRITE_ERR_INVALID_USER\x10\x9a\x85\x04*\xc0\x03\n\nIoSetError\x12\x0f\n\x0bSET_SUCCESS\x10\x00\x12\x19\n\x13SET_ERR_INVALID_NUM\x10\xb6\x84\x04\x12!\n\x1bSET_ERR_UNSUPPORTED_COMMAND\x10\xd3\x83\x04\x12\x1c\n\x16SET_ERR_HARDWARE_ERROR\x10\xe4\x86\x04\x12(\n\"SET_ERR_UNSUPPORTED_AUTHENTICATION\x10\xc2\x84\x04\x12\x15\n\x0fSET_ERR_TIMEOUT\x10\xe3\x86\x04\x12\x1f\n\x19SET_ERR_INVALID_PARTITION\x10\xb8\x84\x04\x12\x1a\n\x14SET_ERR_INVALID_USER\x10\x9a\x85\x04\x12\x19\n\x13SET_ERR_INVALID_PIN\x10\x9c\x85\x04\x12\x19\n\x13SET_ERR_NOT_ALLOWED\x10\x99\x85\x04\x12\x1c\n\x16SET_ERR_EXECUTE_FAILED\x10\xe1\x86\x04\x12\x1b\n\x15SET_ERR_NOT_CONFIRMED\x10\xe2\x86\x04\x12\x1c\n\x16SET_ERR_INVALID_CONFIG\x10\xb7\x84\x04\x12\x1c\n\x16SET_ERR_PIN_LOCKED_OUT\x10\x9d\x85\x04\x12\x1a\n\x14SET_ERR_PIN_REQUIRED\x10\x9b\x85\x04*D\n\x07IoState\x12\x14\n\x10IO_STATE_UNKNOWN\x10\x00\x12\x10\n\x0cIO_STATE_LOW\x10\x01\x12\x11\n\rIO_STATE_HIGH\x10\x02\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14inputs_outputs.proto\x1a\x1b\x62uf/validate/validate.proto\x1a\x0c\x65rrors.proto\"d\n\x11InputOutputStatus\x12\x0b\n\x03num\x18\x01 \x01(\r\x12\x17\n\x05state\x18\x02 \x01(\x0e\x32\x08.IoState\x12\x0f\n\x07trouble\x18\x03 \x01(\x08\x12\x18\n\x05\x65rror\x18\x64 \x01(\x0e\x32\t.GetError\"S\n\x15InputOutputStatusList\x12\'\n\x0bio_statuses\x18\x01 \x03(\x0b\x32\x12.InputOutputStatus\x12\x11\n\tremaining\x18\x02 \x01(\r\"8\n\x0fInputOutputInfo\x12\x0b\n\x03num\x18\x01 \x01(\r\x12\x18\n\x05\x65rror\x18\x64 \x01(\x0e\x32\t.GetError\"L\n\x13InputOutputInfoList\x12\"\n\x08io_infos\x18\x01 \x03(\x0b\x32\x10.InputOutputInfo\x12\x11\n\tremaining\x18\x02 \x01(\r\"\xdd\x02\n\x11InputOutputConfig\x12\x0b\n\x03num\x18\x01 \x01(\r\x12\x15\n\x04name\x18\x02 \x01(\tB\x07\xbaH\x04r\x02( \x12\x1b\n\npartitions\x18\x03 \x01(\x0c\x42\x07\xbaH\x04z\x02\x18\x08\x12\x0f\n\x07\x65nabled\x18\x04 \x01(\x08\x12\x1d\n\x05input\x18\x05 \x01(\x0b\x32\x0c.InputConfigH\x00\x12+\n\x10output_open_high\x18\x06 \x01(\x0b\x32\x0f.OutputOpenHighH\x00\x12)\n\x0foutput_open_low\x18\x07 \x01(\x0b\x32\x0e.OutputOpenLowH\x00\x12%\n\x0fon_board_io_num\x18\n \x01(\x0b\x32\n.IoOnBoardH\x01\x12)\n\x12on_expander_io_num\x18\x0b \x01(\x0b\x32\x0b.IoExpanderH\x01\x12\x18\n\x05\x65rror\x18\x64 \x01(\x0e\x32\t.GetErrorB\t\n\x07hw_typeB\x08\n\x06source\"R\n\x15InputOutputConfigList\x12&\n\nio_configs\x18\x01 \x03(\x0b\x32\x12.InputOutputConfig\x12\x11\n\tremaining\x18\x02 \x01(\r\"5\n\tOutputSet\x12\x0b\n\x03num\x18\x01 \x01(\r\x12\x1b\n\x06io_set\x18\x02 \x01(\x0e\x32\x0b.IoSetValue\"Q\n\rOutputSetResp\x12\x0b\n\x03num\x18\x01 \x01(\r\x12\x17\n\x05state\x18\x02 \x01(\x0e\x32\x08.IoState\x12\x1a\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x0b.IoSetError\"S\n\x12OutputMomentarySet\x12\x0b\n\x03num\x18\x01 \x01(\r\x12\x1b\n\x06io_set\x18\x02 \x01(\x0e\x32\x0b.IoSetValue\x12\x13\n\x0b\x64uration_ms\x18\x03 \x01(\r\"Z\n\x16OutputMomentarySetResp\x12\x0b\n\x03num\x18\x01 \x01(\r\x12\x17\n\x05state\x18\x02 \x01(\x0e\x32\x08.IoState\x12\x1a\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x0b.IoSetError\"\r\n\x0bInputConfig\"\x10\n\x0eOutputOpenHigh\"\x0f\n\rOutputOpenLow\"!\n\tIoOnBoard\x12\x14\n\x0con_board_num\x18\x01 \x01(\r\"@\n\nIoExpander\x12\x16\n\x0eperipheral_num\x18\x01 \x01(\r\x12\x1a\n\x12on_expander_io_num\x18\x02 \x01(\r*\xed\x03\n\nIoSetError\x12\x12\n\x0eIO_SET_SUCCESS\x10\x00\x12\x1c\n\x16IO_SET_ERR_INVALID_NUM\x10\xb6\x84\x04\x12$\n\x1eIO_SET_ERR_UNSUPPORTED_COMMAND\x10\xd3\x83\x04\x12\x1f\n\x19IO_SET_ERR_HARDWARE_ERROR\x10\xe4\x86\x04\x12+\n%IO_SET_ERR_UNSUPPORTED_AUTHENTICATION\x10\xc2\x84\x04\x12\x18\n\x12IO_SET_ERR_TIMEOUT\x10\xe3\x86\x04\x12\"\n\x1cIO_SET_ERR_INVALID_PARTITION\x10\xb8\x84\x04\x12\x1d\n\x17IO_SET_ERR_INVALID_USER\x10\x9a\x85\x04\x12\x1c\n\x16IO_SET_ERR_INVALID_PIN\x10\x9c\x85\x04\x12\x1c\n\x16IO_SET_ERR_NOT_ALLOWED\x10\x99\x85\x04\x12\x1f\n\x19IO_SET_ERR_EXECUTE_FAILED\x10\xe1\x86\x04\x12\x1e\n\x18IO_SET_ERR_NOT_CONFIRMED\x10\xe2\x86\x04\x12\x1f\n\x19IO_SET_ERR_INVALID_CONFIG\x10\xb7\x84\x04\x12\x1f\n\x19IO_SET_ERR_PIN_LOCKED_OUT\x10\x9d\x85\x04\x12\x1d\n\x17IO_SET_ERR_PIN_REQUIRED\x10\x9b\x85\x04*D\n\x07IoState\x12\x14\n\x10IO_STATE_UNKNOWN\x10\x00\x12\x10\n\x0cIO_STATE_LOW\x10\x01\x12\x11\n\rIO_STATE_HIGH\x10\x02*@\n\nIoSetValue\x12\x0e\n\nIO_SET_LOW\x10\x00\x12\x0f\n\x0bIO_SET_HIGH\x10\x01\x12\x11\n\rIO_SET_TOGGLE\x10\x02\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'inputs_outputs_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_INPUTOUTPUTCONFIGGETRESP_WRITE'].fields_by_name['name']._loaded_options = None
-  _globals['_INPUTOUTPUTCONFIGGETRESP_WRITE'].fields_by_name['name']._serialized_options = b'\272H\004r\002( '
-  _globals['_INPUTOUTPUTCONFIGGETRESP_WRITE'].fields_by_name['partition_nums']._loaded_options = None
-  _globals['_INPUTOUTPUTCONFIGGETRESP_WRITE'].fields_by_name['partition_nums']._serialized_options = b'\272H\004z\002\030\010'
-  _globals['_IOSETVALUE']._serialized_start=1974
-  _globals['_IOSETVALUE']._serialized_end=2038
-  _globals['_IOGETERROR']._serialized_start=2040
-  _globals['_IOGETERROR']._serialized_end=2124
-  _globals['_IOWRITEERROR']._serialized_start=2127
-  _globals['_IOWRITEERROR']._serialized_end=2280
-  _globals['_IOSETERROR']._serialized_start=2283
-  _globals['_IOSETERROR']._serialized_end=2731
-  _globals['_IOSTATE']._serialized_start=2733
-  _globals['_IOSTATE']._serialized_end=2801
-  _globals['_INPUTOUTPUTSTATUSGET']._serialized_start=63
-  _globals['_INPUTOUTPUTSTATUSGET']._serialized_end=101
-  _globals['_INPUTOUTPUTSTATUSGETRESP']._serialized_start=104
-  _globals['_INPUTOUTPUTSTATUSGETRESP']._serialized_end=234
-  _globals['_INPUTOUTPUTSTATUSGETMANY']._serialized_start=236
-  _globals['_INPUTOUTPUTSTATUSGETMANY']._serialized_end=325
-  _globals['_INPUTOUTPUTSTATUSGETMANYRESP']._serialized_start=327
-  _globals['_INPUTOUTPUTSTATUSGETMANYRESP']._serialized_end=412
-  _globals['_INPUTOUTPUTINFOGET']._serialized_start=414
-  _globals['_INPUTOUTPUTINFOGET']._serialized_end=450
-  _globals['_INPUTOUTPUTINFOGETRESP']._serialized_start=452
-  _globals['_INPUTOUTPUTINFOGETRESP']._serialized_end=532
-  _globals['_INPUTOUTPUTINFOGETMANY']._serialized_start=534
-  _globals['_INPUTOUTPUTINFOGETMANY']._serialized_end=621
-  _globals['_INPUTOUTPUTINFOGETMANYRESP']._serialized_start=623
-  _globals['_INPUTOUTPUTINFOGETMANYRESP']._serialized_end=702
-  _globals['_INPUTOUTPUTCONFIGGET']._serialized_start=704
-  _globals['_INPUTOUTPUTCONFIGGET']._serialized_end=742
-  _globals['_INPUTOUTPUTCONFIGGETRESP_WRITE']._serialized_start=745
-  _globals['_INPUTOUTPUTCONFIGGETRESP_WRITE']._serialized_end=1170
-  _globals['_INPUTOUTPUTCONFIGWRITERESP']._serialized_start=1172
-  _globals['_INPUTOUTPUTCONFIGWRITERESP']._serialized_end=1255
-  _globals['_INPUTOUTPUTCONFIGGETMANY']._serialized_start=1257
-  _globals['_INPUTOUTPUTCONFIGGETMANY']._serialized_end=1346
-  _globals['_INPUTOUTPUTCONFIGGETMANYRESP']._serialized_start=1348
-  _globals['_INPUTOUTPUTCONFIGGETMANYRESP']._serialized_end=1440
-  _globals['_OUTPUTSET']._serialized_start=1442
-  _globals['_OUTPUTSET']._serialized_end=1507
-  _globals['_OUTPUTSETRESP']._serialized_start=1509
-  _globals['_OUTPUTSETRESP']._serialized_end=1611
-  _globals['_OUTPUTMOMENTARYSET']._serialized_start=1613
-  _globals['_OUTPUTMOMENTARYSET']._serialized_end=1708
-  _globals['_OUTPUTMOMENTARYSETRESP']._serialized_start=1710
-  _globals['_OUTPUTMOMENTARYSETRESP']._serialized_end=1821
-  _globals['_INPUTCONFIG']._serialized_start=1823
-  _globals['_INPUTCONFIG']._serialized_end=1836
-  _globals['_OUTPUTOPENHIGH']._serialized_start=1838
-  _globals['_OUTPUTOPENHIGH']._serialized_end=1854
-  _globals['_OUTPUTOPENLOW']._serialized_start=1856
-  _globals['_OUTPUTOPENLOW']._serialized_end=1871
-  _globals['_IOONBOARD']._serialized_start=1873
-  _globals['_IOONBOARD']._serialized_end=1906
-  _globals['_IOEXPANDER']._serialized_start=1908
-  _globals['_IOEXPANDER']._serialized_end=1972
+  _globals['_INPUTOUTPUTCONFIG'].fields_by_name['name']._loaded_options = None
+  _globals['_INPUTOUTPUTCONFIG'].fields_by_name['name']._serialized_options = b'\272H\004r\002( '
+  _globals['_INPUTOUTPUTCONFIG'].fields_by_name['partitions']._loaded_options = None
+  _globals['_INPUTOUTPUTCONFIG'].fields_by_name['partitions']._serialized_options = b'\272H\004z\002\030\010'
+  _globals['_IOSETERROR']._serialized_start=1293
+  _globals['_IOSETERROR']._serialized_end=1786
+  _globals['_IOSTATE']._serialized_start=1788
+  _globals['_IOSTATE']._serialized_end=1856
+  _globals['_IOSETVALUE']._serialized_start=1858
+  _globals['_IOSETVALUE']._serialized_end=1922
+  _globals['_INPUTOUTPUTSTATUS']._serialized_start=67
+  _globals['_INPUTOUTPUTSTATUS']._serialized_end=167
+  _globals['_INPUTOUTPUTSTATUSLIST']._serialized_start=169
+  _globals['_INPUTOUTPUTSTATUSLIST']._serialized_end=252
+  _globals['_INPUTOUTPUTINFO']._serialized_start=254
+  _globals['_INPUTOUTPUTINFO']._serialized_end=310
+  _globals['_INPUTOUTPUTINFOLIST']._serialized_start=312
+  _globals['_INPUTOUTPUTINFOLIST']._serialized_end=388
+  _globals['_INPUTOUTPUTCONFIG']._serialized_start=391
+  _globals['_INPUTOUTPUTCONFIG']._serialized_end=740
+  _globals['_INPUTOUTPUTCONFIGLIST']._serialized_start=742
+  _globals['_INPUTOUTPUTCONFIGLIST']._serialized_end=824
+  _globals['_OUTPUTSET']._serialized_start=826
+  _globals['_OUTPUTSET']._serialized_end=879
+  _globals['_OUTPUTSETRESP']._serialized_start=881
+  _globals['_OUTPUTSETRESP']._serialized_end=962
+  _globals['_OUTPUTMOMENTARYSET']._serialized_start=964
+  _globals['_OUTPUTMOMENTARYSET']._serialized_end=1047
+  _globals['_OUTPUTMOMENTARYSETRESP']._serialized_start=1049
+  _globals['_OUTPUTMOMENTARYSETRESP']._serialized_end=1139
+  _globals['_INPUTCONFIG']._serialized_start=1141
+  _globals['_INPUTCONFIG']._serialized_end=1154
+  _globals['_OUTPUTOPENHIGH']._serialized_start=1156
+  _globals['_OUTPUTOPENHIGH']._serialized_end=1172
+  _globals['_OUTPUTOPENLOW']._serialized_start=1174
+  _globals['_OUTPUTOPENLOW']._serialized_end=1189
+  _globals['_IOONBOARD']._serialized_start=1191
+  _globals['_IOONBOARD']._serialized_end=1224
+  _globals['_IOEXPANDER']._serialized_start=1226
+  _globals['_IOEXPANDER']._serialized_end=1290
 # @@protoc_insertion_point(module_scope)

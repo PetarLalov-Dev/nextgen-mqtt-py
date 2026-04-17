@@ -23,60 +23,45 @@ _sym_db = _symbol_database.Default()
 
 
 from .buf.validate import validate_pb2 as buf_dot_validate_dot_validate__pb2
+from . import errors_pb2 as errors__pb2
 from . import security_pb2 as security__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\x12\x04user\x1a\x1b\x62uf/validate/validate.proto\x1a\x0esecurity.proto\"!\n\rUserConfigGet\x12\x10\n\x08user_num\x18\x01 \x01(\r\"\xbf\x01\n\x11UserConfigGetResp\x12!\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x12.user.UserGetError\x12\x10\n\x08user_num\x18\x01 \x01(\r\x12\'\n\x07\x64\x65tails\x18\x02 \x01(\x0b\x32\x16.user.UserDetailsWrite\x12L\n\x15partition_permissions\x18\x03 \x03(\x0b\x32#.user.UserPartitionPermissionsWriteB\x08\xbaH\x05\x92\x01\x02\x10\x08\"L\n\x13UserConfigWriteResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.user.UserWriteError\x12\x10\n\x08user_num\x18\x01 \x01(\r\"o\n\x11UserConfigGetMany\x12\x15\n\ruser_num_list\x18\x01 \x03(\r\x12\x16\n\x0euser_num_start\x18\x02 \x01(\r\x12\x14\n\x0cuser_num_end\x18\x03 \x01(\r\x12\x15\n\rpartition_num\x18\x04 \x01(\r\"Y\n\x15UserConfigGetManyResp\x12-\n\x0cuser_configs\x18\x01 \x03(\x0b\x32\x17.user.UserConfigGetResp\x12\x11\n\tremaining\x18\x02 \x01(\r\"Q\n\x10UserDetailsWrite\x12\x10\n\x08user_num\x18\x01 \x01(\r\x12\x15\n\x04name\x18\x02 \x01(\tB\x07\xbaH\x04r\x02\x18+\x12\x14\n\x03pin\x18\x03 \x01(\tB\x07\xbaH\x04r\x02\x18\n\";\n\x14UserDetailsWriteResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.user.UserWriteError\"\x9e\x03\n\x1dUserPartitionPermissionsWrite\x12\x10\n\x08user_num\x18\x01 \x01(\r\x12\x15\n\rpartition_num\x18\x02 \x01(\r\x12\x10\n\x08\x64isabled\x18\x03 \x01(\x08\x12\x36\n\rarming_levels\x18\x04 \x03(\x0e\x32\x15.security.ArmingLevelB\x08\xbaH\x05\x92\x01\x02\x10\x08\x12\x13\n\x0bmaster_user\x18\x05 \x01(\x08\x12\x14\n\x0c\x62ypass_zones\x18\x06 \x01(\x08\x12\x14\n\x0cmanage_users\x18\x07 \x01(\x08\x12\x14\n\x0csystem_tests\x18\x08 \x01(\x08\x12\x14\n\x0cview_history\x18\t \x01(\x08\x12\x17\n\x0f\x63ontrol_outputs\x18\n \x01(\x08\x12\x15\n\rmanage_scenes\x18\x0b \x01(\x08\x12\x11\n\tmanage_ha\x18\x0c \x01(\x08\x12\x17\n\x0fsilence_trouble\x18\r \x01(\x08\x12\x13\n\x0breset_zones\x18\x0e \x01(\x08\x12\x15\n\rconfirm_alarm\x18\x0f \x01(\x08\x12\x15\n\rcontrol_chime\x18\x10 \x01(\x08\"H\n!UserPartitionPermissionsWriteResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.user.UserWriteError\"+\n\x12InstallerConfigGet\x12\x15\n\rinstaller_num\x18\x01 \x01(\r\"\x80\x01\n\x1cInstallerConfigGetResp_Write\x12!\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x12.user.UserGetError\x12\x15\n\rinstaller_num\x18\x01 \x01(\r\x12\x14\n\x03pin\x18\x02 \x01(\tB\x07\xbaH\x04r\x02\x18\n\x12\x10\n\x08\x64isabled\x18\x03 \x01(\x08\"?\n\x18InstallerConfigWriteResp\x12#\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x14.user.UserWriteError\"u\n\x15InstallerConfigGetAll\x12$\n\x12installer_num_list\x18\x01 \x03(\rB\x08\xbaH\x05\x92\x01\x02\x10\x04\x12\x1b\n\x13installer_num_start\x18\x02 \x01(\r\x12\x19\n\x11installer_num_end\x18\x03 \x01(\r\"p\n\x19InstallerConfigGetAllResp\x12@\n\ninstallers\x18\x01 \x03(\x0b\x32\".user.InstallerConfigGetResp_WriteB\x08\xbaH\x05\x92\x01\x02\x10\x04\x12\x11\n\tremaining\x18\x02 \x01(\r*s\n\x0cUserGetError\x12\x0f\n\x0bGET_SUCCESS\x10\x00\x12\x1b\n\x15\x45RR_GENERIC_OR_NESTED\x10\xd1\x83\x04\x12\x19\n\x13GET_ERR_INVALID_NUM\x10\xb6\x84\x04\x12\x1a\n\x14GET_ERR_INVALID_USER\x10\x9a\x85\x04*\x9b\x01\n\x0eUserWriteError\x12\x11\n\rWRITE_SUCCESS\x10\x00\x12\x1b\n\x15WRITE_ERR_INVALID_NUM\x10\xb6\x84\x04\x12\x1e\n\x18WRITE_ERR_INVALID_CONFIG\x10\xb7\x84\x04\x12\x1b\n\x15WRITE_ERR_NOT_ALLOWED\x10\x99\x85\x04\x12\x1c\n\x16WRITE_ERR_INVALID_USER\x10\x9a\x85\x04\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\x1a\x1b\x62uf/validate/validate.proto\x1a\x0c\x65rrors.proto\x1a\x0esecurity.proto\"\x83\x01\n\nUserConfig\x12\x0b\n\x03num\x18\x01 \x01(\r\x12\x1d\n\x07\x64\x65tails\x18\x02 \x01(\x0b\x32\x0c.UserDetails\x12/\n\x0bpermissions\x18\x03 \x03(\x0b\x32\x10.UserPermissionsB\x08\xbaH\x05\x92\x01\x02\x10\x08\x12\x18\n\x05\x65rror\x18\x64 \x01(\x0e\x32\t.GetError\"N\n\x0bUserGetMany\x12\x16\n\x0euser_num_start\x18\x02 \x01(\r\x12\x14\n\x0cuser_num_end\x18\x03 \x01(\r\x12\x11\n\tpartition\x18\x04 \x01(\r\"F\n\x0eUserConfigList\x12!\n\x0cuser_configs\x18\x01 \x03(\x0b\x32\x0b.UserConfig\x12\x11\n\tremaining\x18\x02 \x01(\r\"a\n\x0bUserDetails\x12\x0b\n\x03num\x18\x01 \x01(\r\x12\x15\n\x04name\x18\x02 \x01(\tB\x07\xbaH\x04r\x02\x18+\x12\x14\n\x03pin\x18\x03 \x01(\tB\x07\xbaH\x04r\x02\x18\n\x12\x18\n\x05\x65rror\x18\x64 \x01(\x0e\x32\t.GetError\"C\n\x0fUserDetailsList\x12\x1d\n\x07\x64\x65tails\x18\x01 \x03(\x0b\x32\x0c.UserDetails\x12\x11\n\tremaining\x18\x02 \x01(\r\"\x96\x03\n\x0fUserPermissions\x12\x0b\n\x03num\x18\x01 \x01(\r\x12\x15\n\rpartition_num\x18\x02 \x01(\r\x12\x10\n\x08\x64isabled\x18\x03 \x01(\x08\x12\'\n\narm_levels\x18\x04 \x03(\x0e\x32\t.ArmLevelB\x08\xbaH\x05\x92\x01\x02\x10\x08\x12\x13\n\x0bmaster_user\x18\x05 \x01(\x08\x12\x14\n\x0c\x62ypass_zones\x18\x06 \x01(\x08\x12\x14\n\x0cmanage_users\x18\x07 \x01(\x08\x12\x14\n\x0csystem_tests\x18\x08 \x01(\x08\x12\x14\n\x0cview_history\x18\t \x01(\x08\x12\x17\n\x0f\x63ontrol_outputs\x18\n \x01(\x08\x12\x15\n\rmanage_scenes\x18\x0b \x01(\x08\x12\x11\n\tmanage_ha\x18\x0c \x01(\x08\x12\x17\n\x0fsilence_trouble\x18\r \x01(\x08\x12\x13\n\x0breset_zones\x18\x0e \x01(\x08\x12\x15\n\rconfirm_alarm\x18\x0f \x01(\x08\x12\x15\n\rcontrol_chime\x18\x10 \x01(\x08\x12\x18\n\x05\x65rror\x18\x64 \x01(\x0e\x32\t.GetError\"O\n\x13UserPermissionsList\x12%\n\x0bpermissions\x18\x01 \x03(\x0b\x32\x10.UserPermissions\x12\x11\n\tremaining\x18\x02 \x01(\r\"`\n\x0fInstallerConfig\x12\x0b\n\x03num\x18\x01 \x01(\r\x12\x14\n\x03pin\x18\x02 \x01(\tB\x07\xbaH\x04r\x02\x18\n\x12\x10\n\x08\x64isabled\x18\x03 \x01(\x08\x12\x18\n\x05\x65rror\x18\x64 \x01(\x0e\x32\t.GetError\"X\n\x13InstallerConfigList\x12.\n\ninstallers\x18\x01 \x03(\x0b\x32\x10.InstallerConfigB\x08\xbaH\x05\x92\x01\x02\x10\x04\x12\x11\n\tremaining\x18\x02 \x01(\rb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'user_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_USERCONFIGGETRESP'].fields_by_name['partition_permissions']._loaded_options = None
-  _globals['_USERCONFIGGETRESP'].fields_by_name['partition_permissions']._serialized_options = b'\272H\005\222\001\002\020\010'
-  _globals['_USERDETAILSWRITE'].fields_by_name['name']._loaded_options = None
-  _globals['_USERDETAILSWRITE'].fields_by_name['name']._serialized_options = b'\272H\004r\002\030+'
-  _globals['_USERDETAILSWRITE'].fields_by_name['pin']._loaded_options = None
-  _globals['_USERDETAILSWRITE'].fields_by_name['pin']._serialized_options = b'\272H\004r\002\030\n'
-  _globals['_USERPARTITIONPERMISSIONSWRITE'].fields_by_name['arming_levels']._loaded_options = None
-  _globals['_USERPARTITIONPERMISSIONSWRITE'].fields_by_name['arming_levels']._serialized_options = b'\272H\005\222\001\002\020\010'
-  _globals['_INSTALLERCONFIGGETRESP_WRITE'].fields_by_name['pin']._loaded_options = None
-  _globals['_INSTALLERCONFIGGETRESP_WRITE'].fields_by_name['pin']._serialized_options = b'\272H\004r\002\030\n'
-  _globals['_INSTALLERCONFIGGETALL'].fields_by_name['installer_num_list']._loaded_options = None
-  _globals['_INSTALLERCONFIGGETALL'].fields_by_name['installer_num_list']._serialized_options = b'\272H\005\222\001\002\020\004'
-  _globals['_INSTALLERCONFIGGETALLRESP'].fields_by_name['installers']._loaded_options = None
-  _globals['_INSTALLERCONFIGGETALLRESP'].fields_by_name['installers']._serialized_options = b'\272H\005\222\001\002\020\004'
-  _globals['_USERGETERROR']._serialized_start=1685
-  _globals['_USERGETERROR']._serialized_end=1800
-  _globals['_USERWRITEERROR']._serialized_start=1803
-  _globals['_USERWRITEERROR']._serialized_end=1958
-  _globals['_USERCONFIGGET']._serialized_start=65
-  _globals['_USERCONFIGGET']._serialized_end=98
-  _globals['_USERCONFIGGETRESP']._serialized_start=101
-  _globals['_USERCONFIGGETRESP']._serialized_end=292
-  _globals['_USERCONFIGWRITERESP']._serialized_start=294
-  _globals['_USERCONFIGWRITERESP']._serialized_end=370
-  _globals['_USERCONFIGGETMANY']._serialized_start=372
-  _globals['_USERCONFIGGETMANY']._serialized_end=483
-  _globals['_USERCONFIGGETMANYRESP']._serialized_start=485
-  _globals['_USERCONFIGGETMANYRESP']._serialized_end=574
-  _globals['_USERDETAILSWRITE']._serialized_start=576
-  _globals['_USERDETAILSWRITE']._serialized_end=657
-  _globals['_USERDETAILSWRITERESP']._serialized_start=659
-  _globals['_USERDETAILSWRITERESP']._serialized_end=718
-  _globals['_USERPARTITIONPERMISSIONSWRITE']._serialized_start=721
-  _globals['_USERPARTITIONPERMISSIONSWRITE']._serialized_end=1135
-  _globals['_USERPARTITIONPERMISSIONSWRITERESP']._serialized_start=1137
-  _globals['_USERPARTITIONPERMISSIONSWRITERESP']._serialized_end=1209
-  _globals['_INSTALLERCONFIGGET']._serialized_start=1211
-  _globals['_INSTALLERCONFIGGET']._serialized_end=1254
-  _globals['_INSTALLERCONFIGGETRESP_WRITE']._serialized_start=1257
-  _globals['_INSTALLERCONFIGGETRESP_WRITE']._serialized_end=1385
-  _globals['_INSTALLERCONFIGWRITERESP']._serialized_start=1387
-  _globals['_INSTALLERCONFIGWRITERESP']._serialized_end=1450
-  _globals['_INSTALLERCONFIGGETALL']._serialized_start=1452
-  _globals['_INSTALLERCONFIGGETALL']._serialized_end=1569
-  _globals['_INSTALLERCONFIGGETALLRESP']._serialized_start=1571
-  _globals['_INSTALLERCONFIGGETALLRESP']._serialized_end=1683
+  _globals['_USERCONFIG'].fields_by_name['permissions']._loaded_options = None
+  _globals['_USERCONFIG'].fields_by_name['permissions']._serialized_options = b'\272H\005\222\001\002\020\010'
+  _globals['_USERDETAILS'].fields_by_name['name']._loaded_options = None
+  _globals['_USERDETAILS'].fields_by_name['name']._serialized_options = b'\272H\004r\002\030+'
+  _globals['_USERDETAILS'].fields_by_name['pin']._loaded_options = None
+  _globals['_USERDETAILS'].fields_by_name['pin']._serialized_options = b'\272H\004r\002\030\n'
+  _globals['_USERPERMISSIONS'].fields_by_name['arm_levels']._loaded_options = None
+  _globals['_USERPERMISSIONS'].fields_by_name['arm_levels']._serialized_options = b'\272H\005\222\001\002\020\010'
+  _globals['_INSTALLERCONFIG'].fields_by_name['pin']._loaded_options = None
+  _globals['_INSTALLERCONFIG'].fields_by_name['pin']._serialized_options = b'\272H\004r\002\030\n'
+  _globals['_INSTALLERCONFIGLIST'].fields_by_name['installers']._loaded_options = None
+  _globals['_INSTALLERCONFIGLIST'].fields_by_name['installers']._serialized_options = b'\272H\005\222\001\002\020\004'
+  _globals['_USERCONFIG']._serialized_start=74
+  _globals['_USERCONFIG']._serialized_end=205
+  _globals['_USERGETMANY']._serialized_start=207
+  _globals['_USERGETMANY']._serialized_end=285
+  _globals['_USERCONFIGLIST']._serialized_start=287
+  _globals['_USERCONFIGLIST']._serialized_end=357
+  _globals['_USERDETAILS']._serialized_start=359
+  _globals['_USERDETAILS']._serialized_end=456
+  _globals['_USERDETAILSLIST']._serialized_start=458
+  _globals['_USERDETAILSLIST']._serialized_end=525
+  _globals['_USERPERMISSIONS']._serialized_start=528
+  _globals['_USERPERMISSIONS']._serialized_end=934
+  _globals['_USERPERMISSIONSLIST']._serialized_start=936
+  _globals['_USERPERMISSIONSLIST']._serialized_end=1015
+  _globals['_INSTALLERCONFIG']._serialized_start=1017
+  _globals['_INSTALLERCONFIG']._serialized_end=1113
+  _globals['_INSTALLERCONFIGLIST']._serialized_start=1115
+  _globals['_INSTALLERCONFIGLIST']._serialized_end=1203
 # @@protoc_insertion_point(module_scope)
