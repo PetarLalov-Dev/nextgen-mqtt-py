@@ -353,28 +353,32 @@ def _bottom_toolbar():
         SIGNATURES.get((domain, action))
         or SIGNATURES.get((domain,))
         or _DOMAIN_HINT.get(domain)
-        or "tab=complete  hjkl=menu-nav  ctrl-r=search  ctrl-d=exit"
+        or "tab=complete  hjkl/arrows=menu-nav  ctrl-r=search  ctrl-c/ctrl-d=exit"
     )
     return HTML(f"<ansigray>{html.escape(sig)}</ansigray>")
 
 
 def _build_menu_keybindings() -> KeyBindings:
-    """hjkl for navigating the completion menu, active only while it's open."""
+    """hjkl and arrow keys for navigating the completion menu, active only while it's open."""
     kb = KeyBindings()
 
     @kb.add("j", filter=has_completions)
+    @kb.add("down", filter=has_completions)
     def _(event):
         event.current_buffer.complete_next()
 
     @kb.add("k", filter=has_completions)
+    @kb.add("up", filter=has_completions)
     def _(event):
         event.current_buffer.complete_previous()
 
     @kb.add("h", filter=has_completions)
+    @kb.add("left", filter=has_completions)
     def _(event):
         event.current_buffer.complete_previous()
 
     @kb.add("l", filter=has_completions)
+    @kb.add("right", filter=has_completions)
     def _(event):
         event.current_buffer.complete_next()
 
