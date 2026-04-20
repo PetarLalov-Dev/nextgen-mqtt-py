@@ -70,7 +70,7 @@ PGM_STATES = {"on": 1, "off": 0, "toggle": 2}
 # 'panel' is an alias of 'system'.
 DOMAINS: dict[str, set[str]] = {
     "partition": {"status", "arm", "disarm"},
-    "zone":      {"status", "bypass", "unbypass"},
+    "zone":      {"status", "config", "bypass", "unbypass"},
     "system":    {"status"},
     "panel":     {"status"},  # alias of system
     "alarm":     {"panic", "fire", "medical"},
@@ -83,6 +83,7 @@ SIGNATURES: dict[tuple[str, ...], str] = {
     ("partition", "arm"):     "partition arm <num> <level> [pin] [user]   level=away|stay|night|disarm|int",
     ("partition", "disarm"):  "partition disarm <num> [pin] [user]",
     ("zone",      "status"):  "zone status [num] | zone status <start> <end>",
+    ("zone",      "config"):  "zone config [num] | zone config <start> <end>",
     ("zone",      "bypass"):  "zone bypass <num> or {n n ...} [pin] [user] [part_auth=N]",
     ("zone",      "unbypass"):"zone unbypass <num> or {n n ...} [pin] [user] [part_auth=N]",
     ("system",    "status"):  "system status",
@@ -90,7 +91,7 @@ SIGNATURES: dict[tuple[str, ...], str] = {
     ("alarm",     "panic"):   "alarm panic [notify_cs=y|n]",
     ("alarm",     "fire"):    "alarm fire",
     ("alarm",     "medical"): "alarm medical [notify_cs=y|n]",
-    ("pgm",):                 "pgm <num> <on|off|toggle>",
+    ("pgm",):                 "pgm <num> <on|off|toggle> [pin]",
 }
 
 # Mini-signature hint when only a domain has been typed (no action yet).
@@ -110,6 +111,7 @@ HELP_TEXT = """Interactive commands (optional leading /):
 
   zone
       status [num] | <start> <end>  query one, range, or all zones
+      config [num] | <start> <end>  query zone configuration
       bypass <num> or {n n ...} [pin] [user] [part_auth=N]
       unbypass <num> or {n n ...} [pin] [user] [part_auth=N]
 
@@ -121,7 +123,7 @@ HELP_TEXT = """Interactive commands (optional leading /):
       fire                           trigger fire alarm
       medical [notify_cs=y|n]        trigger medical alarm (notify_cs defaults to y)
 
-  pgm <num> <on|off|toggle>
+  pgm <num> <on|off|toggle> [pin]
 
   <> = required  [] = optional  {} = array
   /help /quit q Ctrl-D"""
@@ -259,6 +261,11 @@ def build_command_payload(domain: str, action: str | None, args: list[str], msg_
             h.zone_status_get.num_start = start
             h.zone_status_get.num_end = end
             return h.SerializeToString(), f"zone_status_get {start}-{end or 'all'}"
+        if action == "config":
+            start, end = _range_from_positional(positional)
+            h.zone_config_get.num_start = start
+            h.zone_config_get.num_end = end
+            return h.SerializeToString(), f"zone_config_get {start}-{end or 'all'}"
         if action in ("bypass", "unbypass"):
             if not positional:
                 raise ValueError(f"zone {action}: zone number(s) required")
@@ -318,6 +325,8 @@ def build_command_payload(domain: str, action: str | None, args: list[str], msg_
         io_set_val = PGM_STATES.get(state_name)
         if io_set_val is None:
             raise ValueError(f"pgm: unknown state '{state_name}' (on/off/toggle)")
+        if "pin" not in kwargs and len(positional) > 2:
+            h.pin = positional[2]
         h.io_output_set.num = num
         h.io_output_set.io_set = io_set_val
         return h.SerializeToString(), f"pgm num={num} {state_name}"
