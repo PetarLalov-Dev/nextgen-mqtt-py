@@ -82,8 +82,8 @@ SIGNATURES: dict[tuple[str, ...], str] = {
     ("partition", "arm"):     "partition arm <num> <level> [pin] [user]   level=away|stay|night|disarm|int",
     ("partition", "disarm"):  "partition disarm <num> [pin] [user]",
     ("zone",      "status"):  "zone status [num] | zone status <start> <end>",
-    ("zone",      "bypass"):  "zone bypass <num> [part_auth=N] [pin=X] [user=N]",
-    ("zone",      "unbypass"):"zone unbypass <num> [part_auth=N] [pin=X] [user=N]",
+    ("zone",      "bypass"):  "zone bypass <num> or {n n ...} [pin] [user] [part_auth=N]",
+    ("zone",      "unbypass"):"zone unbypass <num> or {n n ...} [pin] [user] [part_auth=N]",
     ("system",    "status"):  "system status",
     ("panel",     "status"):  "panel status  (alias of system status)",
     ("pgm",):                 "pgm <num> <on|off|toggle>",
@@ -100,22 +100,22 @@ HELP_TEXT = """Interactive commands (optional leading /):
   <hex>                             send raw hex (spaces OK, e.g. '08 01 82 28')
 
   partition
-      status [num] | [start end]    query one, range, or all partitions
-      arm <num> <level> [pin] [user]    level=away/stay/night/disarm/int
+      status [num] | <start> <end>  query one, range, or all partitions
+      arm <num> <level> [pin] [user]    level=away|stay|night|disarm|int
       disarm <num> [pin] [user]
 
   zone
-      status [num] | [start end]    query one, range, or all zones
-      bypass <num> [part_auth=N]
-      unbypass <num> [part_auth=N]
+      status [num] | <start> <end>  query one, range, or all zones
+      bypass <num> or {n n ...} [pin] [user] [part_auth=N]
+      unbypass <num> or {n n ...} [pin] [user] [part_auth=N]
 
   system                            (alias: panel)
       status
 
   pgm <num> <on|off|toggle>
 
-  /help, /?, ?, help                this text
-  /quit, q, Ctrl-D                  exit interactive mode"""
+  <> = required  [] = optional  {} = array
+  /help /quit q Ctrl-D"""
 
 _ARM_LEVEL_NAMES = sorted(ARM_LEVELS.keys())
 _PGM_STATE_NAMES = sorted(PGM_STATES.keys())
@@ -177,6 +177,37 @@ def _range_from_positional(positional: list[str]) -> tuple[int, int]:
     return 1, 0
 
 
+def _extract_group(tokens: list[str]) -> tuple[list[int], list[str]]:
+    """Parse ``{1 2 3}`` or a single number from the front of *tokens*.
+
+    Returns (numbers, remaining_tokens).  Supports:
+      - ``{1 2 3}`` → [1, 2, 3]
+      - ``{1`` ``2`` ``3}`` → [1, 2, 3]  (braces split across tokens)
+      - ``5`` → [5]  (single number, no braces)
+    """
+    if not tokens:
+        return [], tokens
+    if not tokens[0].startswith("{"):
+        return [int(tokens[0])], tokens[1:]
+
+    nums: list[int] = []
+    rest: list[str] = []
+    inside = True
+    for i, tok in enumerate(tokens):
+        if inside:
+            cleaned = tok.strip("{}")
+            if cleaned:
+                nums.append(int(cleaned))
+            if "}" in tok:
+                rest = tokens[i + 1 :]
+                inside = False
+        else:
+            rest.append(tok)
+    if inside:
+        raise ValueError("unclosed '{' — expected '}'")
+    return nums, rest
+
+
 def build_command_payload(domain: str, action: str | None, args: list[str], msg_id: int) -> tuple[bytes, str]:
     """Build a Helix payload from a <domain> <action> command. Returns (bytes, description)."""
     h = Helix()
@@ -221,13 +252,34 @@ def build_command_payload(domain: str, action: str | None, args: list[str], msg_
             return h.SerializeToString(), f"zone_status_get {start}-{end or 'all'}"
         if action in ("bypass", "unbypass"):
             if not positional:
-                raise ValueError(f"zone {action}: zone number required")
-            zone = int(positional[0])
-            h.zone_bypass.num = zone
-            h.zone_bypass.bypass = action == "bypass"
-            if "part_auth" in kwargs:
-                h.zone_bypass.partition_auth = int(kwargs["part_auth"])
-            return h.SerializeToString(), f"zone {action} num={zone}"
+                raise ValueError(f"zone {action}: zone number(s) required")
+            zones, rest = _extract_group(positional)
+            if not zones:
+                raise ValueError(f"zone {action}: zone number(s) required")
+            if rest and rest[0].lower() in ("y", "n"):
+                rest = rest[1:]
+            if "pin" not in kwargs and rest:
+                h.pin = rest[0]
+                rest = rest[1:]
+            if "user" not in kwargs and rest:
+                h.user_number = int(rest[0])
+            is_bypass = action == "bypass"
+            part_auth = int(kwargs["part_auth"]) if "part_auth" in kwargs else None
+            if len(zones) == 1:
+                h.zone_bypass.num = zones[0]
+                h.zone_bypass.bypass = is_bypass
+                if part_auth is not None:
+                    h.zone_bypass.partition_auth = part_auth
+                desc = f"zone {action} num={zones[0]}"
+            else:
+                for z in zones:
+                    entry = h.zone_bypass_many.bypass_list.add()
+                    entry.num = z
+                    entry.bypass = is_bypass
+                    if part_auth is not None:
+                        entry.partition_auth = part_auth
+                desc = f"zone {action} num={','.join(str(z) for z in zones)}"
+            return h.SerializeToString(), desc
 
     # --- system / panel (alias) ---
     if domain in ("system", "panel"):
