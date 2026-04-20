@@ -21,7 +21,6 @@ from websockets.asyncio.client import ClientConnection
 
 from .auth import AuthClient, DeviceToken, UserToken
 from .config import DEVICE_TOPICS, Environment, StagingEnvironment, Topics
-from .generated.main_pb2 import Helix
 from .helix import parse_helix_message
 from .models import MQTTMessage
 
@@ -210,20 +209,6 @@ class NextGenMQTTClient:
             additional_headers={"Authorization": f"Bearer {user_token.token}"},
         ) as ws:
             logger.info("WebSocket connected!")
-
-            # Warm up the server-side session by sending a keep_alive before handing
-            # control to the caller. device-shard-api sometimes drops the very first
-            # publish frame if it arrives before the session is fully registered;
-            # sending this keep_alive absorbs that drop. The response (if any) flows
-            # through the normal listener path and is harmless.
-            warmup = Helix()
-            warmup.msg_id = 0
-            warmup.keep_alive.SetInParent()
-            try:
-                await ws.send(warmup.SerializeToString())
-                logger.debug("Sent warmup keep_alive")
-            except Exception as exc:
-                logger.debug(f"Warmup keep_alive failed: {exc}")
 
             connection = DeviceConnection(
                 device_serial=device_serial,
