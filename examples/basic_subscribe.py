@@ -73,6 +73,7 @@ DOMAINS: dict[str, set[str]] = {
     "zone":      {"status", "bypass", "unbypass"},
     "system":    {"status"},
     "panel":     {"status"},  # alias of system
+    "alarm":     {"panic", "fire", "medical"},
     "pgm":       set(),       # leaf: pgm <num> <on|off|toggle>
 }
 
@@ -86,6 +87,9 @@ SIGNATURES: dict[tuple[str, ...], str] = {
     ("zone",      "unbypass"):"zone unbypass <num> or {n n ...} [pin] [user] [part_auth=N]",
     ("system",    "status"):  "system status",
     ("panel",     "status"):  "panel status  (alias of system status)",
+    ("alarm",     "panic"):   "alarm panic [notify_cs=y|n]",
+    ("alarm",     "fire"):    "alarm fire",
+    ("alarm",     "medical"): "alarm medical [notify_cs=y|n]",
     ("pgm",):                 "pgm <num> <on|off|toggle>",
 }
 
@@ -111,6 +115,11 @@ HELP_TEXT = """Interactive commands (optional leading /):
 
   system                            (alias: panel)
       status
+
+  alarm
+      panic [notify_cs=y|n]          trigger panic alarm (notify_cs defaults to y)
+      fire                           trigger fire alarm
+      medical [notify_cs=y|n]        trigger medical alarm (notify_cs defaults to y)
 
   pgm <num> <on|off|toggle>
 
@@ -286,6 +295,19 @@ def build_command_payload(domain: str, action: str | None, args: list[str], msg_
         if action == "status":
             h.system_status_get.SetInParent()
             return h.SerializeToString(), f"{domain}_status_get"
+
+    # --- alarm ---
+    if domain == "alarm":
+        notify_cs = kwargs.get("notify_cs", "y").lower() in ("y", "yes", "true", "1")
+        if action == "panic":
+            h.send_panic_alarm.notify_cs = notify_cs
+            return h.SerializeToString(), f"send_panic_alarm notify_cs={notify_cs}"
+        if action == "fire":
+            h.send_fire_alarm.SetInParent()
+            return h.SerializeToString(), "send_fire_alarm"
+        if action == "medical":
+            h.send_medical_alarm.notify_cs = notify_cs
+            return h.SerializeToString(), f"send_medical_alarm notify_cs={notify_cs}"
 
     # --- pgm (leaf — no action word, direct args) ---
     if domain == "pgm":
