@@ -125,12 +125,15 @@ HELP_TEXT = """Interactive commands (optional leading /):
 
   pgm <num> <on|off|toggle> [pin]
 
+  clear                             clear all known retained topics via MQTT
+  clear <suffix> [suffix ...]       clear specific topic(s) (e.g. clear s/p/1 s/p/2)
+
   <> = required  [] = optional  {} = array
   /help /quit q Ctrl-D"""
 
 _ARM_LEVEL_NAMES = sorted(ARM_LEVELS.keys())
 _PGM_STATE_NAMES = sorted(PGM_STATES.keys())
-_META_COMMANDS = ["/help", "/quit"]
+_META_COMMANDS = ["/clear", "/help", "/quit"]
 
 
 def expand_retained_topics(max_num: int) -> list[str]:
@@ -356,7 +359,9 @@ class ReplCompleter(Completer):
 
         action = tokens[1].lower() if len(tokens) > 1 else ""
         candidates: list[str] = []
-        if idx == 1:
+        if domain == "clear" and idx >= 1:
+            candidates = sorted(set(RETAINED_TOPIC_TEMPLATES))
+        elif idx == 1:
             # action for the given domain
             candidates = sorted(DOMAINS.get(domain, set()))
         elif domain == "pgm" and idx == 2:
@@ -416,7 +421,20 @@ def _build_menu_keybindings() -> KeyBindings:
     return kb
 
 
-async def interactive_sender(conn, pending: dict[int, tuple[float, str]]):
+async def _clear_retained_topics(client, serial: str, password: str, suffixes: list[str]):
+    """Clear specific retained topics via a temporary MQTT connection."""
+    try:
+        async with client.connect_mqtt(serial, password) as mqtt_conn:
+            for suffix in suffixes:
+                await mqtt_conn.publish(suffix, b"", qos=1, retain=True)
+                print(f"  {GRAY}cleared:{RST} {serial}/{suffix}")
+            print(f"  {GRAY}done:{RST} cleared {len(suffixes)} topic(s)")
+    except Exception as e:
+        print(f"  {topic_color('e')}error:{RST} {e}")
+        print(f"  {GRAY}(direct MQTT may not be accessible from your network){RST}")
+
+
+async def interactive_sender(conn, pending: dict[int, tuple[float, str]], client=None, password: str = "123123"):
     """REPL: hex payloads or commands. Assigns msg_ids and registers them for response matching."""
     HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
     session: PromptSession[str] = PromptSession(
@@ -443,6 +461,22 @@ async def interactive_sender(conn, pending: dict[int, tuple[float, str]]):
             break
         if text in ("/help", "/?", "?", "help"):
             print(HELP_TEXT)
+            continue
+        if text.lower().startswith("clear") or text.lower().startswith("/clear"):
+            if client is None:
+                print(f"  {topic_color('e')}error:{RST} client not available")
+                continue
+            clear_args = text.lstrip("/").split()[1:]
+            serial = conn.device_serial
+            try:
+                if not clear_args:
+                    suffixes = expand_retained_topics(16)
+                    print(f"  Clearing {len(suffixes)} retained topics for {serial}...")
+                    await _clear_retained_topics(client, serial, password, suffixes)
+                else:
+                    await _clear_retained_topics(client, serial, password, clear_args)
+            except Exception as e:
+                print(f"  {topic_color('e')}error:{RST} {e}")
             continue
 
         parts = text.lstrip("/").split()
@@ -558,7 +592,7 @@ async def main():
                 with patch_stdout(raw=True):
                     listener_task = asyncio.create_task(_listener(conn, pending, topic_filter))
                     try:
-                        await interactive_sender(conn, pending)
+                        await interactive_sender(conn, pending, client=client, password=args.password)
                     finally:
                         listener_task.cancel()
             else:
