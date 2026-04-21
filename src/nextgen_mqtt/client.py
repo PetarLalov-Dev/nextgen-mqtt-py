@@ -160,7 +160,9 @@ class NextGenMQTTClient:
         access_token = await self._auth_client.get_access_token()
         user_token = await self.get_user_token(device_serial)
         endpoints = user_token.secondary if use_secondary and user_token.secondary else user_token.primary
-        api_base = endpoints.api[0]
+        api_url = endpoints.api[0]
+        parsed = urlparse(api_url)
+        api_base = f"{parsed.scheme}://{parsed.netloc}"
 
         client = await self._auth_client._get_client()
         response = await client.post(

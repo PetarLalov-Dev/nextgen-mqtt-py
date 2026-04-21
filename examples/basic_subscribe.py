@@ -35,7 +35,6 @@ from nextgen_mqtt import NextGenMQTTClient
 from nextgen_mqtt.colors import BOLD, GRAY, RST, WHITE, topic_color
 from nextgen_mqtt.generated.main_pb2 import Helix
 
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 HISTORY_FILE = Path.home() / ".cache" / "nextgen_mqtt_interactive_history"
@@ -125,8 +124,8 @@ HELP_TEXT = """Interactive commands (optional leading /):
 
   pgm <num> <on|off|toggle> [pin]
 
-  clear                             clear all known retained topics via MQTT
-  clear <suffix> [suffix ...]       clear specific topic(s) (e.g. clear s/p/1 s/p/2)
+  clear                             clear all retained topics via API
+  clear <suffix> [suffix ...]       clear specific topic(s) via MQTT (e.g. clear s/p/1)
 
   <> = required  [] = optional  {} = array
   /help /quit q Ctrl-D"""
@@ -470,9 +469,9 @@ async def interactive_sender(conn, pending: dict[int, tuple[float, str]], client
             serial = conn.device_serial
             try:
                 if not clear_args:
-                    suffixes = expand_retained_topics(16)
-                    print(f"  Clearing {len(suffixes)} retained topics for {serial}...")
-                    await _clear_retained_topics(client, serial, password, suffixes)
+                    print(f"  Clearing all retained topics for {serial} via API...")
+                    result = await client.cleanup_device(serial)
+                    print(f"  {GRAY}done:{RST} {result}")
                 else:
                     await _clear_retained_topics(client, serial, password, clear_args)
             except Exception as e:
@@ -566,8 +565,16 @@ async def main():
     parser.add_argument("--password", "-p", default="123123", help="Device password for --clear-retained (default: 123123)")
     parser.add_argument("--max-num", type=int, default=16, help="Max number for numbered retained topics (default: 16)")
     parser.add_argument("--filter", "-f", help="Comma-separated topic codes to show (e.g. r,s,i,cf,cd,e,c)")
+    parser.add_argument("--verbose", "-v", action="count", default=0, help="Increase log verbosity (-v=INFO, -vv=DEBUG)")
     args = parser.parse_args()
     topic_filter = set(args.filter.split(",")) if args.filter else None
+
+    log_level = logging.WARNING
+    if args.verbose >= 2:
+        log_level = logging.DEBUG
+    elif args.verbose >= 1:
+        log_level = logging.INFO
+    logging.basicConfig(level=log_level, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 
     print(f"Subscribing to device {args.serial} via WebSocket...")
 

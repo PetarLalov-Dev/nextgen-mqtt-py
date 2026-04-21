@@ -60,9 +60,7 @@ class UserToken:
     secondary: UserTokenEndpoints | None = None
 
 
-# Helix oneof fields that carry an MqttRegistration payload on device login.
-# v1.0.22 uses registration_get_resp; legacy v1.0.21 used registration_write.
-_REGISTRATION_FIELDS = ("registration_get_resp", "registration_write")
+_REGISTRATION_FIELDS = ("registration_get_resp", "registration_set", "registration_write")
 
 
 class AuthClient:
