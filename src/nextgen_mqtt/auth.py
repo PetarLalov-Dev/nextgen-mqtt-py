@@ -4,6 +4,7 @@ Handles OAuth2 token acquisition and user token creation.
 """
 
 import base64
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -12,6 +13,8 @@ import httpx
 
 from .config import Environment
 from .generated.main_pb2 import Helix
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -281,6 +284,12 @@ class AuthClient:
         if which not in _REGISTRATION_FIELDS:
             raise ValueError(f"unexpected Helix oneof in device_login response: {which!r}")
         reg = getattr(helix, which)
+        logger.debug(
+            "device_login response: oneof=%s mqtt_primary=%s mqtt_secondary=%s token=%s... expiration=%s prefix=%s",
+            which, reg.mqtt_primary, reg.mqtt_secondary,
+            reg.jwt_token[:20] if reg.jwt_token else "(empty)",
+            reg.expiration, getattr(reg, "prefix", "N/A"),
+        )
 
         primary = DeviceTokenEndpoints(mq=[reg.mqtt_primary])
         secondary = DeviceTokenEndpoints(mq=[reg.mqtt_secondary]) if reg.mqtt_secondary else None
