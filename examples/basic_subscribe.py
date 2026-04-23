@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 async def main():
-    device_serial = "2530294"  # Change this to your device
+    device_serial = "2530296"  # Change this to your device
 
     print(f"Subscribing to device {device_serial} via WebSocket...")
 
@@ -28,11 +28,11 @@ async def main():
             print("Waiting for messages (Ctrl+C to exit)...\n")
             
             # Send protobuf message to the device
-            hex_payload = '0801e2400408011001'
-            payload = bytes.fromhex(hex_payload)  # Convert hex string to bytes
-            print(f"Sending message to device: {hex_payload}")
-            await conn.send(payload)
-            print(f"Message sent! ({len(payload)} bytes)\n")
+            # hex_payload = '0801e2400408011001'
+            # payload = bytes.fromhex(hex_payload)  # Convert hex string to bytes
+            # print(f"Sending message to device: {hex_payload}")
+            # await conn.send(payload)
+            # print(f"Message sent! ({len(payload)} bytes)\n")
             
             message_count = 0
             async for message in conn.messages():

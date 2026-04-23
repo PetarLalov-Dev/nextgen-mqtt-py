@@ -24,27 +24,25 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x65xtension.proto\x12\textension\"\x0b\n\tKeepAlive\"\x0f\n\rKeepAliveResp\"\xe5\x01\n\nTopicsList\x12\x0b\n\x03\x61ll\x18\x01 \x01(\x08\x12\x15\n\rsystem_status\x18\x02 \x01(\x08\x12\x13\n\x0bsystem_info\x18\x03 \x01(\x08\x12\x15\n\rsystem_config\x18\x04 \x01(\x08\x12\x18\n\x10partition_status\x18\x05 \x01(\x08\x12\x16\n\x0epartition_info\x18\x06 \x01(\x08\x12\x18\n\x10partition_config\x18\x07 \x01(\x08\x12\x13\n\x0bzone_status\x18\x08 \x01(\x08\x12\x11\n\tzone_info\x18\t \x01(\x08\x12\x13\n\x0bzone_config\x18\n \x01(\x08\"|\n\x1eSubscribeSettingsGetResp_Write\x12\x33\n\x05\x65rror\x18\x64 \x01(\x0e\x32$.extension.SubscribeSettingsGetError\x12%\n\x06topics\x18\x01 \x01(\x0b\x32\x15.extension.TopicsList\"\x16\n\x14SubscribeSettingsGet\"S\n\x1aSubscribeSettingsWriteResp\x12\x35\n\x05\x65rror\x18\x64 \x01(\x0e\x32&.extension.SubscribeSettingsWriteError*\xc2\x01\n\x19SubscribeSettingsGetError\x12\"\n\x1eSUBSCRIBE_SETTINGS_GET_SUCCESS\x10\x00\x12&\n\"SUBSCRIBE_SETTINGS_GET_ERR_UNKNOWN\x10\x01\x12,\n(SUBSCRIBE_SETTINGS_GET_ERR_INVALID_TOPIC\x10\x02\x12+\n\'SUBSCRIBE_SETTINGS_GET_ERR_INVALID_USER\x10\x03*\xcc\x01\n\x1bSubscribeSettingsWriteError\x12$\n SUBSCRIBE_SETTINGS_WRITE_SUCCESS\x10\x00\x12(\n$SUBSCRIBE_SETTINGS_WRITE_ERR_UNKNOWN\x10\x01\x12.\n*SUBSCRIBE_SETTINGS_WRITE_ERR_INVALID_TOPIC\x10\x02\x12-\n)SUBSCRIBE_SETTINGS_WRITE_ERR_INVALID_USER\x10\x03\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x65xtension.proto\"\x0b\n\tKeepAlive\"\x0f\n\rKeepAliveResp\"\xe5\x01\n\nTopicsList\x12\x0b\n\x03\x61ll\x18\x01 \x01(\x08\x12\x15\n\rsystem_status\x18\x02 \x01(\x08\x12\x13\n\x0bsystem_info\x18\x03 \x01(\x08\x12\x15\n\rsystem_config\x18\x04 \x01(\x08\x12\x18\n\x10partition_status\x18\x05 \x01(\x08\x12\x16\n\x0epartition_info\x18\x06 \x01(\x08\x12\x18\n\x10partition_config\x18\x07 \x01(\x08\x12\x13\n\x0bzone_status\x18\x08 \x01(\x08\x12\x11\n\tzone_info\x18\t \x01(\x08\x12\x13\n\x0bzone_config\x18\n \x01(\x08\"Y\n\x10SubscribeOptions\x12(\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x19.SubscribeOptionsGetError\x12\x1b\n\x06topics\x18\x01 \x01(\x0b\x32\x0b.TopicsList\"C\n\x17SubscribeOptionsSetResp\x12(\n\x05\x65rror\x18\x64 \x01(\x0e\x32\x19.SubscribeOptionsSetError*\xaa\x01\n\x18SubscribeOptionsGetError\x12\x19\n\x15SUBSCRIBE_GET_SUCCESS\x10\x00\x12&\n SUBSCRIBE_GET_ERR_INTERNAL_ERROR\x10\xd5\x83\x04\x12%\n\x1fSUBSCRIBE_GET_ERR_INVALID_TOPIC\x10\xbb\x84\x04\x12$\n\x1eSUBSCRIBE_GET_ERR_INVALID_USER\x10\x9a\x85\x04*\xaa\x01\n\x18SubscribeOptionsSetError\x12\x19\n\x15SUBSCRIBE_SET_SUCCESS\x10\x00\x12&\n SUBSCRIBE_SET_ERR_INTERNAL_ERROR\x10\xd5\x83\x04\x12%\n\x1fSUBSCRIBE_SET_ERR_INVALID_TOPIC\x10\xbb\x84\x04\x12$\n\x1eSUBSCRIBE_SET_ERR_INVALID_USER\x10\x9a\x85\x04\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'extension_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_SUBSCRIBESETTINGSGETERROR']._serialized_start=528
-  _globals['_SUBSCRIBESETTINGSGETERROR']._serialized_end=722
-  _globals['_SUBSCRIBESETTINGSWRITEERROR']._serialized_start=725
-  _globals['_SUBSCRIBESETTINGSWRITEERROR']._serialized_end=929
-  _globals['_KEEPALIVE']._serialized_start=30
-  _globals['_KEEPALIVE']._serialized_end=41
-  _globals['_KEEPALIVERESP']._serialized_start=43
-  _globals['_KEEPALIVERESP']._serialized_end=58
-  _globals['_TOPICSLIST']._serialized_start=61
-  _globals['_TOPICSLIST']._serialized_end=290
-  _globals['_SUBSCRIBESETTINGSGETRESP_WRITE']._serialized_start=292
-  _globals['_SUBSCRIBESETTINGSGETRESP_WRITE']._serialized_end=416
-  _globals['_SUBSCRIBESETTINGSGET']._serialized_start=418
-  _globals['_SUBSCRIBESETTINGSGET']._serialized_end=440
-  _globals['_SUBSCRIBESETTINGSWRITERESP']._serialized_start=442
-  _globals['_SUBSCRIBESETTINGSWRITERESP']._serialized_end=525
+  _globals['_SUBSCRIBEOPTIONSGETERROR']._serialized_start=442
+  _globals['_SUBSCRIBEOPTIONSGETERROR']._serialized_end=612
+  _globals['_SUBSCRIBEOPTIONSSETERROR']._serialized_start=615
+  _globals['_SUBSCRIBEOPTIONSSETERROR']._serialized_end=785
+  _globals['_KEEPALIVE']._serialized_start=19
+  _globals['_KEEPALIVE']._serialized_end=30
+  _globals['_KEEPALIVERESP']._serialized_start=32
+  _globals['_KEEPALIVERESP']._serialized_end=47
+  _globals['_TOPICSLIST']._serialized_start=50
+  _globals['_TOPICSLIST']._serialized_end=279
+  _globals['_SUBSCRIBEOPTIONS']._serialized_start=281
+  _globals['_SUBSCRIBEOPTIONS']._serialized_end=370
+  _globals['_SUBSCRIBEOPTIONSSETRESP']._serialized_start=372
+  _globals['_SUBSCRIBEOPTIONSSETRESP']._serialized_end=439
 # @@protoc_insertion_point(module_scope)

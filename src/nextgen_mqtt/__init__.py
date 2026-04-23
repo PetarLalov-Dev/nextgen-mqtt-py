@@ -30,7 +30,6 @@ from .client import (
 )
 from .config import (
     DEVICE_TOPICS,
-    DEVICE_TOPICS_EXTENDED,
     Environment,
     ShardConfig,
     StagingEnvironment,
@@ -62,7 +61,6 @@ __all__ = [
     "StagingEnvironment",
     "Topics",
     "DEVICE_TOPICS",
-    "DEVICE_TOPICS_EXTENDED",
     # Models
     "MQTTMessage",
     "TopicType",

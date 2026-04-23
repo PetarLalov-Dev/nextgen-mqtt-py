@@ -89,20 +89,47 @@ class NextGenMQTTClient:
         self,
         device_serial: str,
         ttl_seconds: int = 3600,
-        globals_config: dict[str, Any] | None = None,
+        permissions: dict[str, Any] | None = None,
     ) -> UserToken:
         """Get a user token for WebSocket connection."""
-        if globals_config is None:
-            globals_config = {
-                "can_view_events": True,
-                "can_control_devices": True,
-                "can_manage_users": False,
-                "can_manage_devices": False,
+        if permissions is None:
+            permissions = {
+                "global": {
+                    "partitions": [1, 2, 3, 4],
+                    "zones": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                    "haDevices": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                    "userNumber": 500,
+                },
+                "partition": {
+                    "*": {
+                        "armingLevel": {
+                            "disarm": True,
+                            "away": True,
+                            "stay": True,
+                            "night": True,
+                            "level6": True,
+                            "level7": True,
+                            "level8": True,
+                        },
+                        "bypassZones": True,
+                        "confirmAlarms": True,
+                        "controlChimeMode": True,
+                        "controlOutputs": True,
+                        "manageScenes": True,
+                        "manageUsers": True,
+                        "manageZwaveDevices": True,
+                        "master": True,
+                        "silenceTroubleBeeps": True,
+                        "systemTest": True,
+                        "viewHistory": True,
+                        "zoneSensorReset": True,
+                    }
+                },
             }
         return await self._auth_client.create_user_token(
             device_serial=device_serial,
             ttl_seconds=ttl_seconds,
-            globals_config=globals_config,
+            permissions=permissions,
         )
 
     async def get_device_token(
@@ -115,6 +142,34 @@ class NextGenMQTTClient:
             device_serial=device_serial,
             device_password=device_password,
         )
+
+    async def cleanup_device(self, device_serial: str, use_secondary: bool = False) -> dict:
+        """Clear all retained MQTT messages for a device.
+
+        Calls the device-shard-api cleanup endpoint which subscribes to
+        {device}/# and publishes empty payloads with retain=True to clear
+        all retained messages.
+
+        Args:
+            device_serial: The device serial number.
+            use_secondary: If True, use secondary shard endpoint.
+
+        Returns:
+            Response dict from the API (e.g. {"device_id": "2530294", "status": "ok"}).
+        """
+        access_token = await self._auth_client.get_access_token()
+        user_token = await self.get_user_token(device_serial)
+        endpoints = user_token.secondary if use_secondary and user_token.secondary else user_token.primary
+        api_base = endpoints.api[0]
+
+        client = await self._auth_client._get_client()
+        response = await client.post(
+            f"{api_base}/v1/devices/{device_serial}/cleanup",
+            headers={"Authorization": f"Bearer {access_token.token}"},
+        )
+        response.raise_for_status()
+        logger.info(f"Cleaned up retained messages for device {device_serial}")
+        return response.json()
 
     @asynccontextmanager
     async def connect_websocket(
@@ -140,12 +195,9 @@ class NextGenMQTTClient:
         user_token = await self.get_user_token(device_serial, ttl_seconds=ttl_seconds)
         logger.info(f"Got user token, expires at {user_token.expires_at}")
 
-        # Get WebSocket URL from token response
+        # Get WebSocket URL from token response (now returned as absolute URL)
         endpoints = user_token.secondary if use_secondary and user_token.secondary else user_token.primary
-        ws_base_url = endpoints.ws[0]
-
-        # Construct full WebSocket URL
-        ws_url = f"{ws_base_url}/v1/device/{device_serial}/ws"
+        ws_url = endpoints.ws[0]
         logger.info(f"Connecting to WebSocket: {ws_url}")
 
         # Build topic list for reference
@@ -352,6 +404,22 @@ class MQTTConnection:
     async def send_command(self, payload: bytes | str) -> None:
         """Send a command to the device."""
         await self.publish(Topics.COMMAND, payload)
+
+    async def clear_retained(self, topic_suffix: str) -> None:
+        """Clear a retained message by publishing an empty payload with retain=True."""
+        await self.publish(topic_suffix, b"", retain=True)
+
+    async def clear_all_retained(self, topic_suffixes: list[str] | None = None) -> None:
+        """Clear retained messages for all device topics.
+
+        Args:
+            topic_suffixes: Topics to clear. Defaults to base topics (cf, s, i, r, e).
+                Note: wildcards (cf/#) can't be used to clear — you must specify exact topics.
+        """
+        if topic_suffixes is None:
+            topic_suffixes = ["cf", "s", "i", "r", "e"]
+        for suffix in topic_suffixes:
+            await self.clear_retained(suffix)
 
 
 async def subscribe_websocket(
