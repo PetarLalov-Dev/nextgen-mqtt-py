@@ -111,20 +111,26 @@ def _fix_imports(content: str) -> str:
 
 
 RANGE_PATTERN = re.compile(r"@mqtt\.range\.(\w+):\s*(\d+)-(\d+)")
+ALIAS_PATTERN = re.compile(r"@mqtt\.alias:\s*(\S+)")
+# Matches any oneof field line inside Helix: `<Type> <name> = <num>;`
+FIELD_PATTERN = re.compile(r"^\s+\w[\w.]*\s+(\w+)\s*=\s*\d+;", re.MULTILINE)
 
 # Map annotation names to topic codes
 RANGE_NAME_TO_CODE = {
     "event": "e",
-    "status_info": "s/i",
+    "status_info": "s/i",  # legacy (pre-v1.0.22)
+    "status": "s",
+    "info": "i",
     "config": "cf",
     "config_desired": "cd",
-    "cmd_resp": "r",
     "cmd": "c",
+    "cmd_resp": "r",
+    "config_desired_resp": "cdr",
 }
 
 
 def _generate_topic_ranges(main_proto: Path, output_path: Path) -> None:
-    """Parse @mqtt.range.* annotations from main.proto and write topic_ranges.py."""
+    """Parse @mqtt.range.* and per-field @mqtt.alias annotations from main.proto."""
     content = main_proto.read_text()
     ranges = []
     for match in RANGE_PATTERN.finditer(content):
@@ -139,8 +145,29 @@ def _generate_topic_ranges(main_proto: Path, output_path: Path) -> None:
         print("  Warning: no @mqtt.range annotations found in main.proto")
         return
 
+    # Scan the Helix message body for per-field @mqtt.alias comments. A field's
+    # alias is the last @mqtt.alias annotation seen in the run of comments
+    # immediately preceding the field declaration.
+    aliases: dict[str, str] = {}
+    helix_start = content.find("message Helix")
+    helix_body = content[helix_start:] if helix_start >= 0 else content
+    pending_alias: str | None = None
+    for line in helix_body.splitlines():
+        stripped = line.strip()
+        m_alias = ALIAS_PATTERN.search(stripped)
+        if m_alias:
+            pending_alias = m_alias.group(1)
+            continue
+        m_field = FIELD_PATTERN.match(line)
+        if m_field:
+            if pending_alias:
+                aliases[m_field.group(1)] = pending_alias
+            pending_alias = None
+
     lines = [
-        '"""Topic field-number ranges extracted from main.proto. Do not edit manually."""',
+        '"""Topic field-number ranges and per-field MQTT topic aliases.',
+        "Extracted from main.proto by scripts/generate_proto.py. Do not edit manually.",
+        '"""',
         "",
         "TOPIC_RANGES: list[tuple[int, int, str]] = [",
     ]
@@ -148,9 +175,15 @@ def _generate_topic_ranges(main_proto: Path, output_path: Path) -> None:
         lines.append(f'    ({low}, {high}, "{code}"),')
     lines.append("]")
     lines.append("")
+    lines.append("# field_name → @mqtt.alias template (e.g. '{prefix}/s/p/{num}')")
+    lines.append("FIELD_ALIASES: dict[str, str] = {")
+    for name in sorted(aliases):
+        lines.append(f'    "{name}": "{aliases[name]}",')
+    lines.append("}")
+    lines.append("")
 
     output_path.write_text("\n".join(lines))
-    print(f"  Wrote topic_ranges.py with {len(ranges)} ranges")
+    print(f"  Wrote topic_ranges.py with {len(ranges)} ranges and {len(aliases)} field aliases")
 
 
 if __name__ == "__main__":

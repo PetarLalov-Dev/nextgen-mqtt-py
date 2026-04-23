@@ -24,15 +24,13 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0b\x63loud.proto\x12\x05\x63loud\"\x11\n\x0fOnlineStatusGet\"%\n\x13OnlineStatusGetResp\x12\x0e\n\x06online\x18\x01 \x01(\x08\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0b\x63loud.proto\"\x1e\n\x0cOnlineStatus\x12\x0e\n\x06online\x18\x01 \x01(\x08\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cloud_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_ONLINESTATUSGET']._serialized_start=22
-  _globals['_ONLINESTATUSGET']._serialized_end=39
-  _globals['_ONLINESTATUSGETRESP']._serialized_start=41
-  _globals['_ONLINESTATUSGETRESP']._serialized_end=78
+  _globals['_ONLINESTATUS']._serialized_start=15
+  _globals['_ONLINESTATUS']._serialized_end=45
 # @@protoc_insertion_point(module_scope)

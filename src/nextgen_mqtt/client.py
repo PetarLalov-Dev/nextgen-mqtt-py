@@ -160,7 +160,9 @@ class NextGenMQTTClient:
         access_token = await self._auth_client.get_access_token()
         user_token = await self.get_user_token(device_serial)
         endpoints = user_token.secondary if use_secondary and user_token.secondary else user_token.primary
-        api_base = endpoints.api[0]
+        api_url = endpoints.api[0]
+        parsed = urlparse(api_url)
+        api_base = f"{parsed.scheme}://{parsed.netloc}"
 
         client = await self._auth_client._get_client()
         response = await client.post(
@@ -195,12 +197,9 @@ class NextGenMQTTClient:
         user_token = await self.get_user_token(device_serial, ttl_seconds=ttl_seconds)
         logger.info(f"Got user token, expires at {user_token.expires_at}")
 
-        # Get WebSocket URL from token response
+        # WebSocket URL from token response is already fully qualified (includes /v1/device/{serial}/ws).
         endpoints = user_token.secondary if use_secondary and user_token.secondary else user_token.primary
-        ws_base_url = endpoints.ws[0]
-
-        # Construct full WebSocket URL
-        ws_url = f"{ws_base_url}/v1/device/{device_serial}/ws"
+        ws_url = endpoints.ws[0]
         logger.info(f"Connecting to WebSocket: {ws_url}")
 
         # Build topic list for reference
@@ -341,7 +340,7 @@ class WebSocketConnection:
             helix = None
             try:
                 helix = parse_helix_message(raw)
-                topic = f"{serial}/{helix.topic_code}"
+                topic = helix.resolve_topic(serial)
             except Exception:
                 logger.debug("Failed to decode Helix message, using raw fallback", exc_info=True)
             yield MQTTMessage(

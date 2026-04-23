@@ -22,24 +22,23 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from . import errors_pb2 as errors__pb2
 from . import update_pb2 as update__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x63ommunicator.proto\x12\x0c\x63ommunicator\x1a\x0cupdate.proto\"\x17\n\x15\x43onnectedPanelInfoGet\"\xe1\x01\n\x19\x43onnectedPanelInfoGetResp\x12+\n\npanel_type\x18\x01 \x01(\x0e\x32\x17.communicator.PanelType\x12-\n\x0bpanel_model\x18\x02 \x01(\x0e\x32\x18.communicator.PanelModel\x12-\n\x0bwire_method\x18\x03 \x01(\x0e\x32\x18.communicator.WireMethod\x12\x10\n\x08panel_id\x18\x04 \x01(\t\x12\'\n\x06\x66w_ver\x18\x05 \x01(\x0b\x32\x17.update.FirmwareVersion*f\n\tPanelType\x12\x0e\n\nPT_UNKNOWN\x10\x00\x12\n\n\x06PT_DSC\x10\x01\x12\x10\n\x0cPT_HONEYWELL\x10\x02\x12\x11\n\rPT_INTERLOGIX\x10\x03\x12\x0c\n\x08PT_NAPCO\x10\x04\x12\n\n\x06PT_HAI\x10\x05*\xf1\x06\n\nPanelModel\x12\x0e\n\nPM_UNKNOWN\x10\x00\x12\x11\n\rPM_DSC_PC1616\x10\x01\x12\x11\n\rPM_DSC_PC1832\x10\x02\x12\x11\n\rPM_DSC_PC1864\x10\x03\x12\x11\n\rPM_DSC_PC5010\x10\x04\x12\x11\n\rPM_DSC_PC5020\x10\x05\x12\x11\n\rPM_DSC_PC1555\x10\x06\x12\x11\n\rPM_DSC_ALEXOR\x10\x07\x12\x12\n\x0ePM_DSC_IMPASSA\x10\x08\x12\x15\n\x11PM_DSC_NEO_HS2016\x10\t\x12\x15\n\x11PM_DSC_NEO_HS2032\x10\n\x12\x15\n\x11PM_DSC_NEO_HS2064\x10\x0b\x12\x15\n\x11PM_DSC_NEO_HS2128\x10\x0c\x12\x17\n\x13PM_DSC_NEO_HS2032_R\x10\r\x12\x17\n\x13PM_DSC_NEO_HS2064_R\x10\x0e\x12\x13\n\x0fPM_HW_VISTA_10P\x10\x0f\x12\x12\n\x0ePM_HW_VISTA_15\x10\x10\x12\x12\n\x0ePM_HW_VISTA_20\x10\x11\x12\x13\n\x0fPM_HW_VISTA_15P\x10\x12\x12\x13\n\x0fPM_HW_VISTA_20P\x10\x13\x12\x14\n\x10PM_HW_VISTA_21IP\x10\x14\x12\x13\n\x0fPM_HW_VISTA_128\x10\x15\x12\x15\n\x11PM_HW_VISTA_FA130\x10\x16\x12\x11\n\rPM_HW_FA148CP\x10\x17\x12\x11\n\rPM_HW_FA168CP\x10\x18\x12\x15\n\x11PM_HW_SW_PRO_3000\x10\x19\x12\x0e\n\nPM_GE_NX_4\x10\x1a\x12\x0e\n\nPM_GE_NX_6\x10\x1b\x12\x0e\n\nPM_GE_NX_8\x10\x1c\x12\x0f\n\x0bPM_GE_NX_8E\x10\x1d\x12\x16\n\x12PM_GE_NX_CONCORD_2\x10\x1e\x12\x16\n\x12PM_GE_NX_CONCORD_3\x10\x1f\x12\x16\n\x12PM_GE_NX_CONCORD_4\x10 \x12\x1c\n\x18PM_GE_NX_CONCORD_EXPRESS\x10!\x12\x15\n\x11PM_NAPCO_GEM_P800\x10\"\x12\x15\n\x11PM_NAPCO_GEM_P801\x10#\x12\x15\n\x11PM_NAPCO_GEM_P816\x10$\x12\x16\n\x12PM_NAPCO_GEM_P1632\x10%\x12\x16\n\x12PM_NAPCO_GEM_P3200\x10&\x12\x16\n\x12PM_NAPCO_GEM_P9600\x10\'\x12\x12\n\x0ePM_HAI_OMNIPRO\x10(*\xa6\x01\n\nWireMethod\x12\x10\n\x0cWIRE_UNKNOWN\x10\x00\x12\x1e\n\x1aWIRE_EVENTS_DIALER_CAPTURE\x10\x01\x12\x19\n\x15WIRE_EVENTS_PANEL_BUS\x10\x02\x12\x19\n\x15WIRE_ARMING_KEYSWITCH\x10\x03\x12\x17\n\x13WIRE_VIRTUAL_KEYPAD\x10\x04\x12\x17\n\x13WIRE_FULL_PANEL_BUS\x10\x05\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x63ommunicator.proto\x1a\x0c\x65rrors.proto\x1a\x0cupdate.proto\"\xb4\x01\n\x12\x43onnectedPanelInfo\x12\x1e\n\npanel_type\x18\x01 \x01(\x0e\x32\n.PanelType\x12 \n\x0bpanel_model\x18\x02 \x01(\x0e\x32\x0b.PanelModel\x12 \n\x0bwire_method\x18\x03 \x01(\x0e\x32\x0b.WireMethod\x12 \n\x06\x66w_ver\x18\x04 \x01(\x0b\x32\x10.FirmwareVersion\x12\x18\n\x05\x65rror\x18\x64 \x01(\x0e\x32\t.GetError*\x96\x01\n\tPanelType\x12\x16\n\x12PANEL_TYPE_UNKNOWN\x10\x00\x12\x12\n\x0ePANEL_TYPE_DSC\x10\x01\x12\x18\n\x14PANEL_TYPE_HONEYWELL\x10\x02\x12\x19\n\x15PANEL_TYPE_INTERLOGIX\x10\x03\x12\x14\n\x10PANEL_TYPE_NAPCO\x10\x04\x12\x12\n\x0ePANEL_TYPE_HAI\x10\x05*\xe2\t\n\nPanelModel\x12\x17\n\x13PANEL_MODEL_UNKNOWN\x10\x00\x12\x1a\n\x16PANEL_MODEL_DSC_PC1616\x10\x01\x12\x1a\n\x16PANEL_MODEL_DSC_PC1832\x10\x02\x12\x1a\n\x16PANEL_MODEL_DSC_PC1864\x10\x03\x12\x1a\n\x16PANEL_MODEL_DSC_PC5010\x10\x04\x12\x1a\n\x16PANEL_MODEL_DSC_PC5020\x10\x05\x12\x1a\n\x16PANEL_MODEL_DSC_PC1555\x10\x06\x12\x1a\n\x16PANEL_MODEL_DSC_ALEXOR\x10\x07\x12\x1b\n\x17PANEL_MODEL_DSC_IMPASSA\x10\x08\x12\x1e\n\x1aPANEL_MODEL_DSC_NEO_HS2016\x10\t\x12\x1e\n\x1aPANEL_MODEL_DSC_NEO_HS2032\x10\n\x12\x1e\n\x1aPANEL_MODEL_DSC_NEO_HS2064\x10\x0b\x12\x1e\n\x1aPANEL_MODEL_DSC_NEO_HS2128\x10\x0c\x12 \n\x1cPANEL_MODEL_DSC_NEO_HS2032_R\x10\r\x12 \n\x1cPANEL_MODEL_DSC_NEO_HS2064_R\x10\x0e\x12\x1c\n\x18PANEL_MODEL_HW_VISTA_10P\x10\x0f\x12\x1b\n\x17PANEL_MODEL_HW_VISTA_15\x10\x10\x12\x1b\n\x17PANEL_MODEL_HW_VISTA_20\x10\x11\x12\x1c\n\x18PANEL_MODEL_HW_VISTA_15P\x10\x12\x12\x1c\n\x18PANEL_MODEL_HW_VISTA_20P\x10\x13\x12\x1d\n\x19PANEL_MODEL_HW_VISTA_21IP\x10\x14\x12\x1c\n\x18PANEL_MODEL_HW_VISTA_128\x10\x15\x12\x1e\n\x1aPANEL_MODEL_HW_VISTA_FA130\x10\x16\x12\x1a\n\x16PANEL_MODEL_HW_FA148CP\x10\x17\x12\x1a\n\x16PANEL_MODEL_HW_FA168CP\x10\x18\x12\x1e\n\x1aPANEL_MODEL_HW_SW_PRO_3000\x10\x19\x12\x17\n\x13PANEL_MODEL_GE_NX_4\x10\x1a\x12\x17\n\x13PANEL_MODEL_GE_NX_6\x10\x1b\x12\x17\n\x13PANEL_MODEL_GE_NX_8\x10\x1c\x12\x18\n\x14PANEL_MODEL_GE_NX_8E\x10\x1d\x12\x1f\n\x1bPANEL_MODEL_GE_NX_CONCORD_2\x10\x1e\x12\x1f\n\x1bPANEL_MODEL_GE_NX_CONCORD_3\x10\x1f\x12\x1f\n\x1bPANEL_MODEL_GE_NX_CONCORD_4\x10 \x12%\n!PANEL_MODEL_GE_NX_CONCORD_EXPRESS\x10!\x12\x1e\n\x1aPANEL_MODEL_NAPCO_GEM_P800\x10\"\x12\x1e\n\x1aPANEL_MODEL_NAPCO_GEM_P801\x10#\x12\x1e\n\x1aPANEL_MODEL_NAPCO_GEM_P816\x10$\x12\x1f\n\x1bPANEL_MODEL_NAPCO_GEM_P1632\x10%\x12\x1f\n\x1bPANEL_MODEL_NAPCO_GEM_P3200\x10&\x12\x1f\n\x1bPANEL_MODEL_NAPCO_GEM_P9600\x10\'\x12\x1b\n\x17PANEL_MODEL_HAI_OMNIPRO\x10(*\xa6\x01\n\nWireMethod\x12\x10\n\x0cWIRE_UNKNOWN\x10\x00\x12\x1e\n\x1aWIRE_EVENTS_DIALER_CAPTURE\x10\x01\x12\x19\n\x15WIRE_EVENTS_PANEL_BUS\x10\x02\x12\x19\n\x15WIRE_ARMING_KEYSWITCH\x10\x03\x12\x17\n\x13WIRE_VIRTUAL_KEYPAD\x10\x04\x12\x17\n\x13WIRE_FULL_PANEL_BUS\x10\x05\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'communicator_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_PANELTYPE']._serialized_start=303
-  _globals['_PANELTYPE']._serialized_end=405
-  _globals['_PANELMODEL']._serialized_start=408
-  _globals['_PANELMODEL']._serialized_end=1289
-  _globals['_WIREMETHOD']._serialized_start=1292
-  _globals['_WIREMETHOD']._serialized_end=1458
-  _globals['_CONNECTEDPANELINFOGET']._serialized_start=50
-  _globals['_CONNECTEDPANELINFOGET']._serialized_end=73
-  _globals['_CONNECTEDPANELINFOGETRESP']._serialized_start=76
-  _globals['_CONNECTEDPANELINFOGETRESP']._serialized_end=301
+  _globals['_PANELTYPE']._serialized_start=234
+  _globals['_PANELTYPE']._serialized_end=384
+  _globals['_PANELMODEL']._serialized_start=387
+  _globals['_PANELMODEL']._serialized_end=1637
+  _globals['_WIREMETHOD']._serialized_start=1640
+  _globals['_WIREMETHOD']._serialized_end=1806
+  _globals['_CONNECTEDPANELINFO']._serialized_start=51
+  _globals['_CONNECTEDPANELINFO']._serialized_end=231
 # @@protoc_insertion_point(module_scope)
