@@ -550,6 +550,12 @@ def _print_message(message, pending, topic_filter):
             payload_dict = MessageToDict(h.payload, preserving_proto_field_name=True)
             if payload_dict:
                 print(f"  {GRAY}payload:{RST} {WHITE}{BOLD}{payload_dict}{RST}")
+            if h.topic_code in ("r", "cdr"):
+                err = payload_dict.get("error")
+                if err:
+                    print(f"  {topic_color('e')}{BOLD}✗ {err}{RST}")
+                else:
+                    print(f"  {topic_color('r')}{BOLD}✓ OK{RST}")
         except Exception as e:
             print(f"  {GRAY}error:{RST}   {topic_color('e')}{e}{RST}")
     print()
