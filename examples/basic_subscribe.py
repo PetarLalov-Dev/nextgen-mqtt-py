@@ -80,12 +80,12 @@ DOMAINS: dict[str, set[str]] = {
 # Signatures keyed by (domain, action) or (domain,) for leaf domains.
 SIGNATURES: dict[tuple[str, ...], str] = {
     ("partition", "status"):  "partition status [num] | partition status <start> <end>",
-    ("partition", "arm"):     "partition arm <num> or {n n} <level> [pin] [user]   level=away|stay|night|disarm",
-    ("partition", "disarm"):  "partition disarm <num> or {n n} [pin] [user]",
+    ("partition", "arm"):     "partition arm <num> or {1 2 ...} <level> or {away stay ...} [pin] [user]   level=away|stay|night|disarm",
+    ("partition", "disarm"):  "partition disarm <num> or {1 2 ...} [pin] [user]",
     ("zone",      "status"):  "zone status [num] | zone status <start> <end>",
     ("zone",      "config"):  "zone config [num] | zone config <start> <end>",
-    ("zone",      "bypass"):  "zone bypass <num> or {n n ...} [pin] [user] [part_auth=N]",
-    ("zone",      "unbypass"):"zone unbypass <num> or {n n ...} [pin] [user] [part_auth=N]",
+    ("zone",      "bypass"):  "zone bypass <num> or {1 2 ...} [pin] [user] [part_auth=N]",
+    ("zone",      "unbypass"):"zone unbypass <num> or {1 2 ...} [pin] [user] [part_auth=N]",
     ("ha",        "status"):  "ha status [num] | ha status <start> <end>",
     ("ha",        "on"):      "ha on <num> [part_auth=N]",
     ("ha",        "off"):     "ha off <num> [part_auth=N]",
