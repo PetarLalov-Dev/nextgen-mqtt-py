@@ -80,8 +80,8 @@ DOMAINS: dict[str, set[str]] = {
 # Signatures keyed by (domain, action) or (domain,) for leaf domains.
 SIGNATURES: dict[tuple[str, ...], str] = {
     ("partition", "status"):  "partition status [num] | partition status <start> <end>",
-    ("partition", "arm"):     "partition arm <num> <level> [pin] [user]   level=away|stay|night|disarm|int",
-    ("partition", "disarm"):  "partition disarm <num> [pin] [user]",
+    ("partition", "arm"):     "partition arm <num> or {n n} <level> [pin] [user]   level=away|stay|night|disarm",
+    ("partition", "disarm"):  "partition disarm <num> or {n n} [pin] [user]",
     ("zone",      "status"):  "zone status [num] | zone status <start> <end>",
     ("zone",      "config"):  "zone config [num] | zone config <start> <end>",
     ("zone",      "bypass"):  "zone bypass <num> or {n n ...} [pin] [user] [part_auth=N]",
@@ -113,8 +113,8 @@ HELP_TEXT = """Interactive commands (optional leading /):
 
   partition
       status [num] | <start> <end>  query one, range, or all partitions
-      arm <num> <level> [pin] [user]    level=away|stay|night|disarm|int
-      disarm <num> [pin] [user]
+      arm <num> or {n n} <level> [pin] [user]   level=away|stay|night|disarm
+      disarm <num> or {n n} [pin] [user]
 
   zone
       status [num] | <start> <end>  query one, range, or all zones
@@ -238,6 +238,31 @@ def _extract_group(tokens: list[str]) -> tuple[list[int], list[str]]:
     return nums, rest
 
 
+def _extract_str_group(tokens: list[str]) -> tuple[list[str], list[str]]:
+    """Like _extract_group but returns raw strings instead of ints."""
+    if not tokens:
+        return [], tokens
+    if not tokens[0].startswith("{"):
+        return [tokens[0]], tokens[1:]
+
+    items: list[str] = []
+    rest: list[str] = []
+    inside = True
+    for i, tok in enumerate(tokens):
+        if inside:
+            cleaned = tok.strip("{}")
+            if cleaned:
+                items.append(cleaned)
+            if "}" in tok:
+                rest = tokens[i + 1 :]
+                inside = False
+        else:
+            rest.append(tok)
+    if inside:
+        raise ValueError("unclosed '{' — expected '}'")
+    return items, rest
+
+
 def build_command_payload(domain: str, action: str | None, args: list[str], msg_id: int) -> tuple[bytes, str]:
     """Build a Helix payload from a <domain> <action> command. Returns (bytes, description)."""
     h = Helix()
@@ -257,21 +282,37 @@ def build_command_payload(domain: str, action: str | None, args: list[str], msg_
             h.partition_status_get.num_end = end
             return h.SerializeToString(), f"partition_status_get {start}-{end or 'all'}"
         if action in ("arm", "disarm"):
-            partition = int(positional[0]) if positional else 1
+            partitions, rest = _extract_group(positional)
+            if not partitions:
+                partitions = [1]
             if action == "disarm":
-                level_name, level_val = "disarm", ARM_LEVELS["disarm"]
-                pin_idx, user_idx = 1, 2
+                levels = ["disarm"] * len(partitions)
             else:
-                level_name = positional[1].lower() if len(positional) > 1 else "away"
-                level_val = ARM_LEVELS.get(level_name) or int(level_name)
-                pin_idx, user_idx = 2, 3
-            if "pin" not in kwargs and len(positional) > pin_idx:
-                h.pin = positional[pin_idx]
-            if "user" not in kwargs and len(positional) > user_idx:
-                h.user_number = int(positional[user_idx])
-            h.arm.partition_num = partition
-            h.arm.level = level_val
-            return h.SerializeToString(), f"{action} p={partition} level={level_name}"
+                level_names, rest = _extract_str_group(rest) if rest else (["away"], rest)
+                if len(level_names) == 1:
+                    levels = [level_names[0].lower()] * len(partitions)
+                elif len(level_names) == len(partitions):
+                    levels = [ln.lower() for ln in level_names]
+                else:
+                    raise ValueError(f"partition arm: {len(partitions)} partitions but {len(level_names)} levels")
+            if "pin" not in kwargs and rest:
+                h.pin = rest[0]
+                rest = rest[1:]
+            if "user" not in kwargs and rest:
+                h.user_number = int(rest[0])
+            level_vals = [ARM_LEVELS.get(lv) or int(lv) for lv in levels]
+            if len(partitions) == 1:
+                h.arm.partition_num = partitions[0]
+                h.arm.level = level_vals[0]
+                desc = f"{action} p={partitions[0]} level={levels[0]}"
+            else:
+                for p, lv in zip(partitions, level_vals):
+                    entry = h.arm_many.partition_num_list.add()
+                    entry.partition_num = p
+                    entry.level = lv
+                level_desc = levels[0] if len(set(levels)) == 1 else ",".join(levels)
+                desc = f"{action} p={','.join(str(p) for p in partitions)} level={level_desc}"
+            return h.SerializeToString(), desc
 
     # --- zone ---
     if domain == "zone":
