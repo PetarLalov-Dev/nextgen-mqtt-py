@@ -70,6 +70,7 @@ PGM_STATES = {"on": 1, "off": 0, "toggle": 2}
 DOMAINS: dict[str, set[str]] = {
     "partition": {"status", "arm", "disarm"},
     "zone":      {"status", "config", "bypass", "unbypass"},
+    "ha":        {"status", "on", "off", "toggle", "level", "lock", "unlock"},
     "system":    {"status"},
     "panel":     {"status"},  # alias of system
     "alarm":     {"panic", "fire", "medical"},
@@ -85,6 +86,13 @@ SIGNATURES: dict[tuple[str, ...], str] = {
     ("zone",      "config"):  "zone config [num] | zone config <start> <end>",
     ("zone",      "bypass"):  "zone bypass <num> or {n n ...} [pin] [user] [part_auth=N]",
     ("zone",      "unbypass"):"zone unbypass <num> or {n n ...} [pin] [user] [part_auth=N]",
+    ("ha",        "status"):  "ha status [num] | ha status <start> <end>",
+    ("ha",        "on"):      "ha on <num> [part_auth=N]",
+    ("ha",        "off"):     "ha off <num> [part_auth=N]",
+    ("ha",        "toggle"):  "ha toggle <num> [part_auth=N]",
+    ("ha",        "level"):   "ha level <num> <0-100|on|off> [part_auth=N]",
+    ("ha",        "lock"):    "ha lock <num> [part_auth=N]",
+    ("ha",        "unlock"):  "ha unlock <num> [part_auth=N]",
     ("system",    "status"):  "system status",
     ("panel",     "status"):  "panel status  (alias of system status)",
     ("alarm",     "panic"):   "alarm panic [notify_cs=y|n]",
@@ -113,6 +121,15 @@ HELP_TEXT = """Interactive commands (optional leading /):
       config [num] | <start> <end>  query zone configuration
       bypass <num> or {n n ...} [pin] [user] [part_auth=N]
       unbypass <num> or {n n ...} [pin] [user] [part_auth=N]
+
+  ha
+      status [num] | <start> <end>  query HA device status
+      on <num>                      turn on
+      off <num>                     turn off
+      toggle <num>                  toggle on/off
+      level <num> <0-100|on|off>    set dimmer level
+      lock <num>                    lock
+      unlock <num>                  unlock
 
   system                            (alias: panel)
       status
@@ -298,6 +315,56 @@ def build_command_payload(domain: str, action: str | None, args: list[str], msg_
                         entry.partition_auth = part_auth
                 desc = f"zone {action} num={','.join(str(z) for z in zones)}"
             return h.SerializeToString(), desc
+
+    # --- ha (home automation) ---
+    if domain == "ha":
+        part_auth = int(kwargs["part_auth"]) if "part_auth" in kwargs else None
+        if action == "status":
+            start, end = _range_from_positional(positional)
+            h.ha_device_status_get.num_start = start
+            h.ha_device_status_get.num_end = end
+            return h.SerializeToString(), f"ha_device_status_get {start}-{end or 'all'}"
+        if action in ("on", "off"):
+            if not positional:
+                raise ValueError(f"ha {action}: device number required")
+            num = int(positional[0])
+            h.ha_on_off_set.num = num
+            h.ha_on_off_set.on_off = action == "on"
+            if part_auth is not None:
+                h.ha_on_off_set.partition_auth = part_auth
+            return h.SerializeToString(), f"ha {action} num={num}"
+        if action == "toggle":
+            if not positional:
+                raise ValueError("ha toggle: device number required")
+            num = int(positional[0])
+            h.ha_toggle_set.num = num
+            if part_auth is not None:
+                h.ha_toggle_set.partition_auth = part_auth
+            return h.SerializeToString(), f"ha toggle num={num}"
+        if action == "level":
+            if len(positional) < 2:
+                raise ValueError("ha level: expected <num> <0-100|on|off>")
+            num = int(positional[0])
+            h.ha_level_set.num = num
+            level_arg = positional[1].lower()
+            if level_arg == "on":
+                h.ha_level_set.on_off = True
+            elif level_arg == "off":
+                h.ha_level_set.on_off = False
+            else:
+                h.ha_level_set.level = int(level_arg)
+            if part_auth is not None:
+                h.ha_level_set.partition_auth = part_auth
+            return h.SerializeToString(), f"ha level num={num} {level_arg}"
+        if action in ("lock", "unlock"):
+            if not positional:
+                raise ValueError(f"ha {action}: device number required")
+            num = int(positional[0])
+            h.ha_lock_set.num = num
+            h.ha_lock_set.lock_unlock = action == "lock"
+            if part_auth is not None:
+                h.ha_lock_set.partition_auth = part_auth
+            return h.SerializeToString(), f"ha {action} num={num}"
 
     # --- system / panel (alias) ---
     if domain in ("system", "panel"):
