@@ -639,6 +639,23 @@ async def _listener(conn, pending, topic_filter):
         print(f"{topic_color('e')}connection closed:{RST} {e}")
 
 
+def _collect_errors(d: dict | list, prefix: str = "") -> list[str]:
+    """Recursively collect all 'error' values from a payload dict/list."""
+    errors: list[str] = []
+    if isinstance(d, dict):
+        if "error" in d:
+            ctx = ", ".join(f"{k}={v}" for k, v in d.items() if k != "error")
+            errors.append(f"{d['error']} ({ctx})" if ctx else str(d["error"]))
+        for k, v in d.items():
+            if isinstance(v, (dict, list)):
+                errors.extend(_collect_errors(v, prefix=k))
+    elif isinstance(d, list):
+        for item in d:
+            if isinstance(item, dict):
+                errors.extend(_collect_errors(item, prefix=prefix))
+    return errors
+
+
 def _print_message(message, pending, topic_filter):
     code = message.topic_type.value
     if topic_filter and code not in topic_filter:
@@ -659,9 +676,10 @@ def _print_message(message, pending, topic_filter):
             if payload_dict:
                 print(f"  {GRAY}payload:{RST} {WHITE}{BOLD}{payload_dict}{RST}")
             if h.topic_code in ("r", "cdr"):
-                err = payload_dict.get("error")
-                if err:
-                    print(f"  {topic_color('e')}{BOLD}✗ {err}{RST}")
+                errors = _collect_errors(payload_dict)
+                if errors:
+                    for err in errors:
+                        print(f"  {topic_color('e')}{BOLD}✗ {err}{RST}")
                 else:
                     print(f"  {topic_color('r')}{BOLD}✓ OK{RST}")
         except Exception as e:
