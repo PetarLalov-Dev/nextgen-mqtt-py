@@ -17,7 +17,9 @@ import asyncio
 import html
 import logging
 import time
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any, TypeVar
 
 import websockets.exceptions
 from google.protobuf.json_format import MessageToDict
@@ -207,60 +209,44 @@ def _range_from_positional(positional: list[str]) -> tuple[int, int]:
     return 1, 0
 
 
-def _extract_group(tokens: list[str]) -> tuple[list[int], list[str]]:
-    """Parse ``{1 2 3}`` or a single number from the front of *tokens*.
+_T = TypeVar("_T")
 
-    Returns (numbers, remaining_tokens).  Supports:
+
+def _extract_group(tokens: list[str], cast: Callable[[str], _T] = int) -> tuple[list[_T], list[str]]:
+    """Parse ``{a b c}`` or a single value from the front of *tokens*.
+
+    Returns (values, remaining_tokens).  Supports:
       - ``{1 2 3}`` → [1, 2, 3]
       - ``{1`` ``2`` ``3}`` → [1, 2, 3]  (braces split across tokens)
-      - ``5`` → [5]  (single number, no braces)
+      - ``5`` → [5]  (single value, no braces)
     """
     if not tokens:
         return [], tokens
     if not tokens[0].startswith("{"):
-        return [int(tokens[0])], tokens[1:]
+        return [cast(tokens[0])], tokens[1:]
 
-    nums: list[int] = []
-    rest: list[str] = []
-    inside = True
+    items: list[_T] = []
     for i, tok in enumerate(tokens):
-        if inside:
-            cleaned = tok.strip("{}")
-            if cleaned:
-                nums.append(int(cleaned))
-            if "}" in tok:
-                rest = tokens[i + 1 :]
-                inside = False
-        else:
-            rest.append(tok)
-    if inside:
-        raise ValueError("unclosed '{' — expected '}'")
-    return nums, rest
+        cleaned = tok.strip("{}")
+        if cleaned:
+            items.append(cast(cleaned))
+        if "}" in tok:
+            return items, tokens[i + 1 :]
+    raise ValueError("unclosed '{' — expected '}'")
 
 
-def _extract_str_group(tokens: list[str]) -> tuple[list[str], list[str]]:
-    """Like _extract_group but returns raw strings instead of ints."""
-    if not tokens:
-        return [], tokens
-    if not tokens[0].startswith("{"):
-        return [tokens[0]], tokens[1:]
-
-    items: list[str] = []
-    rest: list[str] = []
-    inside = True
-    for i, tok in enumerate(tokens):
-        if inside:
-            cleaned = tok.strip("{}")
-            if cleaned:
-                items.append(cleaned)
-            if "}" in tok:
-                rest = tokens[i + 1 :]
-                inside = False
-        else:
-            rest.append(tok)
-    if inside:
-        raise ValueError("unclosed '{' — expected '}'")
-    return items, rest
+def _ha_level_setter(submsg: Any, positional: list[str]) -> str:
+    """Populate ha_level_set from positional[1] = on|off|<0-100>. Returns desc suffix."""
+    if len(positional) < 2:
+        raise ValueError("ha level: expected <num> <0-100|on|off>")
+    arg = positional[1].lower()
+    if arg == "on":
+        submsg.on_off = True
+    elif arg == "off":
+        submsg.on_off = False
+    else:
+        submsg.level = int(arg)
+    return f" {arg}"
 
 
 def build_command_payload(domain: str, action: str | None, args: list[str], msg_id: int) -> tuple[bytes, str]:
@@ -288,11 +274,14 @@ def build_command_payload(domain: str, action: str | None, args: list[str], msg_
             if action == "disarm":
                 levels = ["disarm"] * len(partitions)
             else:
-                level_names, rest = _extract_str_group(rest) if rest else (["away"], rest)
+                if rest:
+                    level_names, rest = _extract_group(rest, cast=str.lower)
+                else:
+                    level_names = ["away"]
                 if len(level_names) == 1:
-                    levels = [level_names[0].lower()] * len(partitions)
+                    levels = level_names * len(partitions)
                 elif len(level_names) == len(partitions):
-                    levels = [ln.lower() for ln in level_names]
+                    levels = level_names
                 else:
                     raise ValueError(f"partition arm: {len(partitions)} partitions but {len(level_names)} levels")
             if "pin" not in kwargs and rest:
@@ -300,7 +289,14 @@ def build_command_payload(domain: str, action: str | None, args: list[str], msg_
                 rest = rest[1:]
             if "user" not in kwargs and rest:
                 h.user_number = int(rest[0])
-            level_vals = [ARM_LEVELS.get(lv) or int(lv) for lv in levels]
+            level_vals: list[int] = []
+            for lv in levels:
+                if lv in ARM_LEVELS:
+                    level_vals.append(ARM_LEVELS[lv])
+                elif lv.isdigit():
+                    level_vals.append(int(lv))
+                else:
+                    raise ValueError(f"unknown arm level: {lv!r} (expected one of {sorted(ARM_LEVELS)} or numeric)")
             if len(partitions) == 1:
                 h.arm.partition_num = partitions[0]
                 h.arm.level = level_vals[0]
@@ -365,47 +361,28 @@ def build_command_payload(domain: str, action: str | None, args: list[str], msg_
             h.ha_device_status_get.num_start = start
             h.ha_device_status_get.num_end = end
             return h.SerializeToString(), f"ha_device_status_get {start}-{end or 'all'}"
-        if action in ("on", "off"):
+
+        # Map action → (submsg_attr, extra_setter). Submsg_attr identifies which
+        # ha_*_set oneof to populate; extra_setter writes the action-specific bool/level.
+        ha_targets: dict[str, tuple[str, Callable[[Any, list[str]], str]]] = {
+            "on":     ("ha_on_off_set", lambda m, _p: setattr(m, "on_off", True) or ""),
+            "off":    ("ha_on_off_set", lambda m, _p: setattr(m, "on_off", False) or ""),
+            "toggle": ("ha_toggle_set", lambda _m, _p: ""),
+            "lock":   ("ha_lock_set",   lambda m, _p: setattr(m, "lock_unlock", True) or ""),
+            "unlock": ("ha_lock_set",   lambda m, _p: setattr(m, "lock_unlock", False) or ""),
+            "level":  ("ha_level_set",  _ha_level_setter),
+        }
+        if action in ha_targets:
             if not positional:
                 raise ValueError(f"ha {action}: device number required")
             num = int(positional[0])
-            h.ha_on_off_set.num = num
-            h.ha_on_off_set.on_off = action == "on"
+            attr, setter = ha_targets[action]
+            submsg = getattr(h, attr)
+            submsg.num = num
+            extra = setter(submsg, positional)
             if part_auth is not None:
-                h.ha_on_off_set.partition_auth = part_auth
-            return h.SerializeToString(), f"ha {action} num={num}"
-        if action == "toggle":
-            if not positional:
-                raise ValueError("ha toggle: device number required")
-            num = int(positional[0])
-            h.ha_toggle_set.num = num
-            if part_auth is not None:
-                h.ha_toggle_set.partition_auth = part_auth
-            return h.SerializeToString(), f"ha toggle num={num}"
-        if action == "level":
-            if len(positional) < 2:
-                raise ValueError("ha level: expected <num> <0-100|on|off>")
-            num = int(positional[0])
-            h.ha_level_set.num = num
-            level_arg = positional[1].lower()
-            if level_arg == "on":
-                h.ha_level_set.on_off = True
-            elif level_arg == "off":
-                h.ha_level_set.on_off = False
-            else:
-                h.ha_level_set.level = int(level_arg)
-            if part_auth is not None:
-                h.ha_level_set.partition_auth = part_auth
-            return h.SerializeToString(), f"ha level num={num} {level_arg}"
-        if action in ("lock", "unlock"):
-            if not positional:
-                raise ValueError(f"ha {action}: device number required")
-            num = int(positional[0])
-            h.ha_lock_set.num = num
-            h.ha_lock_set.lock_unlock = action == "lock"
-            if part_auth is not None:
-                h.ha_lock_set.partition_auth = part_auth
-            return h.SerializeToString(), f"ha {action} num={num}"
+                submsg.partition_auth = part_auth
+            return h.SerializeToString(), f"ha {action} num={num}{extra}"
 
     # --- system / panel (alias) ---
     if domain in ("system", "panel"):
@@ -639,20 +616,20 @@ async def _listener(conn, pending, topic_filter):
         print(f"{topic_color('e')}connection closed:{RST} {e}")
 
 
-def _collect_errors(d: dict | list, prefix: str = "") -> list[str]:
+def _collect_errors(d: dict | list) -> list[str]:
     """Recursively collect all 'error' values from a payload dict/list."""
     errors: list[str] = []
     if isinstance(d, dict):
         if "error" in d:
             ctx = ", ".join(f"{k}={v}" for k, v in d.items() if k != "error")
             errors.append(f"{d['error']} ({ctx})" if ctx else str(d["error"]))
-        for k, v in d.items():
+        for v in d.values():
             if isinstance(v, (dict, list)):
-                errors.extend(_collect_errors(v, prefix=k))
+                errors.extend(_collect_errors(v))
     elif isinstance(d, list):
         for item in d:
-            if isinstance(item, dict):
-                errors.extend(_collect_errors(item, prefix=prefix))
+            if isinstance(item, (dict, list)):
+                errors.extend(_collect_errors(item))
     return errors
 
 
