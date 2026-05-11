@@ -5,7 +5,7 @@ Handles OAuth2 token acquisition and user token creation.
 
 import base64
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
@@ -31,8 +31,8 @@ class AccessToken:
 class UserTokenEndpoints:
     """API and WebSocket endpoints from user token response."""
 
-    api: list[str]
     ws: list[str]
+    api: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -200,15 +200,15 @@ class AuthClient:
             expires_at = datetime.fromtimestamp(exp_str)
 
         primary = UserTokenEndpoints(
-            api=data["p"]["api"],
             ws=data["p"]["ws"],
+            api=data["p"].get("api", []),
         )
 
         secondary = None
         if "s" in data and data["s"]:
             secondary = UserTokenEndpoints(
-                api=data["s"]["api"],
                 ws=data["s"]["ws"],
+                api=data["s"].get("api", []),
             )
 
         return UserToken(
